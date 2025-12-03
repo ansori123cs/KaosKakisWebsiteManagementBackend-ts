@@ -1,0 +1,908 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "prevId": "",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.jenis_mesin": {
+      "name": "jenis_mesin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kode_mesin": {
+          "name": "kode_mesin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "data_mesin_nama_key": {
+          "columns": [
+            "nama"
+          ],
+          "nullsNotDistinct": false,
+          "name": "data_mesin_nama_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.kaos_kaki": {
+      "name": "kaos_kaki",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jenis_bahan_id": {
+          "name": "jenis_bahan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "keterangan": {
+          "name": "keterangan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_order_date": {
+          "name": "last_order_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kode_kaos_kaki": {
+          "name": "kode_kaos_kaki",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "kaos_kaki_jenis_bahan_id_fkey": {
+          "name": "kaos_kaki_jenis_bahan_id_fkey",
+          "tableFrom": "kaos_kaki",
+          "tableTo": "jenis_bahan",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "jenis_bahan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "uk_nama_jenis": {
+          "columns": [
+            "nama",
+            "jenis_bahan_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "uk_nama_jenis"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.jenis_bahan": {
+      "name": "jenis_bahan",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kode_bahan": {
+          "name": "kode_bahan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "jenis_bahan_nama_key": {
+          "columns": [
+            "nama"
+          ],
+          "nullsNotDistinct": false,
+          "name": "jenis_bahan_nama_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.ukuran": {
+      "name": "ukuran",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kode_ukuran": {
+          "name": "kode_ukuran",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ukuran_nama_key": {
+          "columns": [
+            "nama"
+          ],
+          "nullsNotDistinct": false,
+          "name": "ukuran_nama_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.warna": {
+      "name": "warna",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kode_warna": {
+          "name": "kode_warna",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "warna_nama_key": {
+          "columns": [
+            "nama"
+          ],
+          "nullsNotDistinct": false,
+          "name": "warna_nama_key"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.pesanan": {
+      "name": "pesanan",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nama_pemesan": {
+          "name": "nama_pemesan",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catatan": {
+          "name": "catatan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.pesanan_detail": {
+      "name": "pesanan_detail",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "pesanan_id": {
+          "name": "pesanan_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kaos_kaki_variasi_id": {
+          "name": "kaos_kaki_variasi_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "jumlah": {
+          "name": "jumlah",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "harga_satuan": {
+          "name": "harga_satuan",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "pesanan_detail_kaos_kaki_variasi_id_fkey": {
+          "name": "pesanan_detail_kaos_kaki_variasi_id_fkey",
+          "tableFrom": "pesanan_detail",
+          "tableTo": "kaos_kaki_variasi_detail",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "kaos_kaki_variasi_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "pesanan_detail_pesanan_id_fkey": {
+          "name": "pesanan_detail_pesanan_id_fkey",
+          "tableFrom": "pesanan_detail",
+          "tableTo": "pesanan",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "pesanan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "pesanan_detail_harga_satuan_check": {
+          "name": "pesanan_detail_harga_satuan_check",
+          "value": "harga_satuan > (0)::numeric"
+        },
+        "pesanan_detail_jumlah_check": {
+          "name": "pesanan_detail_jumlah_check",
+          "value": "jumlah > 0"
+        }
+      },
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.foto_kaos_kaki": {
+      "name": "foto_kaos_kaki",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kaos_kaki_id": {
+          "name": "kaos_kaki_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "foto_kaos_kaki_kaos_kaki_id_fkey": {
+          "name": "foto_kaos_kaki_kaos_kaki_id_fkey",
+          "tableFrom": "foto_kaos_kaki",
+          "tableTo": "kaos_kaki",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "kaos_kaki_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    },
+    "public.data_mesin": {
+      "name": "data_mesin",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "data_mesin_id_seq1",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public"
+          }
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "kaos_kaki_id": {
+          "name": "kaos_kaki_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "jenis_mesin_id": {
+          "name": "jenis_mesin_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "data_mesin_jenis_mesin_id_fkey": {
+          "name": "data_mesin_jenis_mesin_id_fkey",
+          "tableFrom": "data_mesin",
+          "tableTo": "jenis_mesin",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "jenis_mesin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "data_mesin_kaos_kaki_id_fkey": {
+          "name": "data_mesin_kaos_kaki_id_fkey",
+          "tableFrom": "data_mesin",
+          "tableTo": "kaos_kaki",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "kaos_kaki_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": true
+    },
+    "public.status": {
+      "name": "status",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "status_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public"
+          }
+        },
+        "enum": {
+          "name": "enum",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cratedAt": {
+          "name": "cratedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": true
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "users_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public"
+          }
+        },
+        "nama_user": {
+          "name": "nama_user",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'refresh_token_secret_key'"
+        },
+        "telephone_number": {
+          "name": "telephone_number",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": true
+    },
+    "public.stok_kaos_kaki": {
+      "name": "stok_kaos_kaki",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "stok_kaos_kaki_id_seq",
+            "increment": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "startWith": "1",
+            "cache": "1",
+            "cycle": false,
+            "schema": "public"
+          }
+        },
+        "id_kaos": {
+          "name": "id_kaos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_ukuran": {
+          "name": "id_ukuran",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_warna": {
+          "name": "id_warna",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stok": {
+          "name": "stok",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "stok_kaos_kaki_id_kaos_fkey": {
+          "name": "stok_kaos_kaki_id_kaos_fkey",
+          "tableFrom": "stok_kaos_kaki",
+          "tableTo": "kaos_kaki",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "id_kaos"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stok_kaos_kaki_id_ukuran_fkey": {
+          "name": "stok_kaos_kaki_id_ukuran_fkey",
+          "tableFrom": "stok_kaos_kaki",
+          "tableTo": "ukuran",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "id_ukuran"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "stok_kaos_kaki_id_warna_fkey": {
+          "name": "stok_kaos_kaki_id_warna_fkey",
+          "tableFrom": "stok_kaos_kaki",
+          "tableTo": "warna",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "id_warna"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": true
+    },
+    "public.kaos_kaki_variasi_detail": {
+      "name": "kaos_kaki_variasi_detail",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "kaos_kaki_id": {
+          "name": "kaos_kaki_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ukuran_id": {
+          "name": "ukuran_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "warna_id": {
+          "name": "warna_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "kaos_kaki_variasi_kaos_kaki_id_fkey": {
+          "name": "kaos_kaki_variasi_kaos_kaki_id_fkey",
+          "tableFrom": "kaos_kaki_variasi_detail",
+          "tableTo": "kaos_kaki",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "kaos_kaki_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "kaos_kaki_variasi_ukuran_id_fkey": {
+          "name": "kaos_kaki_variasi_ukuran_id_fkey",
+          "tableFrom": "kaos_kaki_variasi_detail",
+          "tableTo": "ukuran",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "ukuran_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "kaos_kaki_variasi_warna_id_fkey": {
+          "name": "kaos_kaki_variasi_warna_id_fkey",
+          "tableFrom": "kaos_kaki_variasi_detail",
+          "tableTo": "warna",
+          "schemaTo": "public",
+          "columnsFrom": [
+            "warna_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "uk_variasi": {
+          "columns": [
+            "kaos_kaki_id",
+            "ukuran_id",
+            "warna_id"
+          ],
+          "nullsNotDistinct": false,
+          "name": "uk_variasi"
+        }
+      },
+      "checkConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {}
+  }
+}
