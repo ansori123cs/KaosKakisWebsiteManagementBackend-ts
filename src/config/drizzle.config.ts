@@ -1,5 +1,5 @@
 import { defineConfig } from "drizzle-kit";
-import { DB_URI } from "./config/env.ts";
+import { DB_URI } from "./env.ts";
 
 export default defineConfig({
   out: "./src/models/",

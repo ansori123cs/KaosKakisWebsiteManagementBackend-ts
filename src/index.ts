@@ -1,26 +1,32 @@
 import express from "express";
 import createError from "http-errors";
-import { DB_URI, PORT } from "./config/env.ts";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
-import { jenisBahan, jenisMesin } from "./models/schema.ts";
+import { PORT } from "./config/env.ts";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { corsOptions } from "./config/cors.ts";
+import arcjetMiddleware from "./middlewares/arcjet.middleware.ts";
 
-const client = postgres(DB_URI!, { prepare: false });
-const db = drizzle({ client });
 const app = express();
 
-app.use(express.json());
+// Pasang CORS **sebelum** route lain
+app.use(cors(corsOptions));
 
-// TODO: Routing aplikasi akan kita tulis di sini
+// Tangani preflight request untuk semua route
+app.options("", cors(corsOptions));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+//cookie parser
+app.use(cookieParser());
+
+//arcjet middleware
+app.use(arcjetMiddleware);
 
 app.use("/", async (req, res, next) => {
-  const dataMesin = await db.select().from(jenisMesin);
+  const welcomeMessage = "Welcome To Website Kaos Kaki Management Backend";
   return res.status(200).json({
     success: true,
-    message: "Data Jenis Mesin",
-    data: {
-      jenisBahanList: dataMesin,
-    },
+    message: welcomeMessage,
   });
 });
 // handle 404 error
