@@ -5,6 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { corsOptions } from "./config/cors.ts";
 import arcjetMiddleware from "./middlewares/arcjet.middleware.ts";
+import errorMiddleware from "./middlewares/error.middleware.ts";
 
 const app = express();
 
@@ -29,6 +30,10 @@ app.use("/", async (req, res, next) => {
     message: welcomeMessage,
   });
 });
+
+//error handler middleware
+app.use(errorMiddleware);
+
 // handle 404 error
 app.use((req, res, next) => {
   next(createError(404));
