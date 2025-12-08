@@ -93,12 +93,10 @@ export const authorizeRole = (...roles: string[]) => {
         .json({ success: false, message: "Unauthorize ; User not Registered" });
     }
     if (!roles.includes(req.user.role)) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Unauthorize : insufficient permissions",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorize : insufficient permissions",
+      });
     }
     next();
   };

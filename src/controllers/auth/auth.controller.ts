@@ -1,11 +1,11 @@
-import { db } from "@/config/database.ts";
-import { JWT_EXPIRES_IN, JWT_SECRET } from "@/config/env.ts";
-import { users } from "@/models/schema.ts";
+import { db } from "../..//config/database.ts";
+import { JWT_EXPIRES_IN, JWT_SECRET } from "../../config/env.ts";
+import { users } from "../../models/schema.ts";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
+import type { SignOptions } from "jsonwebtoken";
 interface SignUpPayload {
   name: string;
   email: string;
@@ -79,8 +79,8 @@ export const SignUp = async (
           password: hashedPassword,
           telephoneNumber: payload.telephone_number,
           role: "user",
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .returning({
           id: users.id,
@@ -92,19 +92,18 @@ export const SignUp = async (
       return insertedUser;
     });
 
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET must be defined in environment variables");
-    }
+    const signOptions: SignOptions = {
+      expiresIn: (Number(JWT_EXPIRES_IN) as number) || 24,
+    };
+
     const token = jwt.sign(
       {
         id: newUser.id,
         email: newUser.email,
         role: newUser.role,
       },
-      JWT_SECRET,
-      {
-        expiresIn: JWT_EXPIRES_IN || "24h",
-      }
+      JWT_SECRET!,
+      signOptions
     );
 
     res.status(201).json({

@@ -1,5 +1,5 @@
-import { NODE_ENV } from "@/config/env.ts";
-import { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
+import { NODE_ENV } from "../config/env.ts";
 
 const isDev = NODE_ENV === "development";
 
