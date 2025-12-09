@@ -6,11 +6,17 @@ import { eq } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
+
 interface SignUpPayload {
   name: string;
   email: string;
   password: string;
   telephone_number: string;
+}
+
+interface SignInPayload {
+  email: string;
+  password: string;
 }
 
 class AppError extends Error {
@@ -23,6 +29,7 @@ class AppError extends Error {
   }
 }
 
+//Sign Up - Controller
 export const SignUp = async (
   req: Request<{}, {}, SignUpPayload>,
   res: Response,
@@ -112,14 +119,96 @@ export const SignUp = async (
       data: {
         token,
         user: {
-          id: newUser.id,
           name: newUser.namaUser,
           email: newUser.email,
-          telephone_number: newUser.telephoneNumber,
           role: newUser.role,
         },
       },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Sign In - Controller
+export const SignIn = async (
+  req: Request<{}, {}, SignInPayload>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const payload = req.body;
+
+    if (!payload || !payload.email || !payload.password) {
+      throw new AppError("Invalid Email Or Password", 400);
+    }
+
+    const [userLogged] = await db
+      .select({
+        id: users.id,
+        name: users.namaUser,
+        email: users.email,
+        password: users.password,
+        role: users.role,
+      })
+      .from(users)
+      .where(eq(users.email, payload.email))
+      .limit(1);
+
+    if (!userLogged) {
+      throw new AppError("Invalid Email Or Password", 400);
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      payload.password,
+      userLogged.password!
+    );
+
+    if (!isPasswordValid) {
+      throw new AppError("Invalid Email Or Password", 400);
+    }
+
+    const signOptions: SignOptions = {
+      expiresIn: (Number(JWT_EXPIRES_IN) as number) || 900,
+    };
+
+    const token = jwt.sign(
+      {
+        id: userLogged.id,
+        email: userLogged.email,
+        role: userLogged.role,
+      },
+      JWT_SECRET!,
+      signOptions
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "User Sign In Successfully",
+      data: {
+        token,
+        users: {
+          name: userLogged.name,
+          email: userLogged.email,
+          role: userLogged.role,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Sign Out
+export const SignOut = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    res
+      .status(200)
+      .json({ success: true, message: "User Sign Out Successfully" });
   } catch (error) {
     next(error);
   }
