@@ -1,9 +1,9 @@
-import { db } from "@/config/database.ts";
-import { jenisMesin } from "@/models/schema.ts";
+import { db } from "../../config/database.ts";
+import { jenisMesin } from "../..//models/schema.ts";
 import { asc, count } from "drizzle-orm";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 
-export const getAllMachine = async (
+export const getMachineData = async (
   req: Request,
   res: Response,
   next: NextFunction

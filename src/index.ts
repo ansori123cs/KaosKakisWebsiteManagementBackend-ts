@@ -6,7 +6,8 @@ import cookieParser from "cookie-parser";
 import { corsOptions } from "./config/cors.ts";
 import arcjetMiddleware from "./middlewares/arcjet.middleware.ts";
 import errorMiddleware from "./middlewares/error.middleware.ts";
-import authRouter from "./routes/auth.router.ts";
+import authRouter from "./routes/auth/auth.router.ts";
+import machineRouter from "./routes/master/machine.router.ts";
 
 const app = express();
 
@@ -24,7 +25,11 @@ app.use(cookieParser());
 //arcjet middleware
 app.use(arcjetMiddleware);
 
+//auth router
 app.use("/api/v1/auth", authRouter);
+//master router
+app.use("/api/v1/machine", machineRouter);
+
 app.use("/", async (req, res, next) => {
   const welcomeMessage = "Welcome To Website Kaos Kaki Management Backend";
   return res.status(200).json({
