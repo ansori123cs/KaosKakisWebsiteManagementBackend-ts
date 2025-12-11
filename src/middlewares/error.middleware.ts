@@ -1,21 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { NODE_ENV } from "../config/env.ts";
+import { CustomError, ErrorResponse } from "@/types/utils/generic.types.ts";
 
 const isDev = NODE_ENV === "development";
-
-interface CustomError extends Error {
-  statusCode?: number;
-  code?: number;
-  error?: Record<string, { message: string }>;
-  keyValue?: Record<string, any>;
-}
-
-interface ErrorResponse {
-  success: boolean;
-  error: string;
-  stack?: string;
-  details?: any;
-}
 
 const errorMiddleware = (
   err: CustomError,

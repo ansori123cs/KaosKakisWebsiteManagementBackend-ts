@@ -25,3 +25,11 @@ export interface RateLimitOptions {
   message?: string;
   skipSuccessfulRequests?: boolean;
 }
+
+declare global {
+  namespace jwt {
+    interface payload {
+      email: string;
+    }
+  }
+}

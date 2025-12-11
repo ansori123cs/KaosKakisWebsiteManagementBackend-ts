@@ -6,10 +6,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
 // Custom types dengan selection
-export type UserSafe = Pick<
-  User,
-  "id" | "namaUser" | "email" | "role" | "createdAt"
->;
+export type UserSafe = Pick<User, "id" | "namaUser" | "email" | "role">;
 export type UserWithTokens = User & {
   accessToken?: string;
   refreshToken?: string;

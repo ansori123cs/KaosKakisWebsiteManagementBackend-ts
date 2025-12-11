@@ -47,8 +47,6 @@ export const authorize = async (
         namaUser: users.namaUser,
         email: users.email,
         role: users.role,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
       })
       .from(users)
       .where(eq(users.id, decoded.id))

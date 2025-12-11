@@ -28,3 +28,17 @@ export interface PaginationParams {
 export interface FilterOptions {
   [key: string]: any;
 }
+
+export interface CustomError extends Error {
+  statusCode?: number;
+  code?: number;
+  error?: Record<string, { message: string }>;
+  keyValue?: Record<string, any>;
+}
+
+export interface ErrorResponse {
+  success: boolean;
+  error: string;
+  stack?: string;
+  details?: any;
+}
