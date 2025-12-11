@@ -12,18 +12,6 @@ interface JwtPayload {
   [key: string]: any;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: number;
-        email: string;
-        role: string;
-      };
-    }
-  }
-}
-
 export const authorize = async (
   req: Request,
   res: Response,
@@ -54,7 +42,14 @@ export const authorize = async (
     const decoded = jwt.verify(token, JWT_SECRET!) as JwtPayload;
 
     const [user] = await db
-      .select({ id: users.id, email: users.email, role: users.role })
+      .select({
+        id: users.id,
+        namaUser: users.namaUser,
+        email: users.email,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
       .from(users)
       .where(eq(users.id, decoded.id))
       .limit(1);
