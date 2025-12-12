@@ -8,6 +8,17 @@ export interface User {
   createdAt: string;
   updatedAt: string | null;
 }
+export interface SignUpPayload {
+  name: string;
+  email: string;
+  password: string;
+  telephone_number: string;
+}
+
+export interface SignInPayload {
+  email: string;
+  password: string;
+}
 
 export interface UserProfile {
   id: number;

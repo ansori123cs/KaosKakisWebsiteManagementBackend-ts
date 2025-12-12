@@ -1,10 +1,11 @@
+import { authorize } from "../../middlewares/auth.middleware.ts";
 import { getMachineData } from "../../controllers/master/master.machine.controller.ts";
 import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 
 const machineRouter = Router();
 
-machineRouter.get("/", getMachineData);
+machineRouter.get("/", authorize, getMachineData);
 
 machineRouter.post(
   "/create",

@@ -59,13 +59,18 @@ export const getMachineData = async (
         },
       },
     });
-  } catch (err: unknown) {
-    const error = err as { statusCode?: number; message?: string };
-    // Error handling yang lebih spesifik
-    if (!error.statusCode) {
-      error.statusCode = 500;
-      error.message = "Gagal mengambil data jenis bahan";
-    }
+  } catch (error) {
     next(error);
+  }
+};
+
+export const newMachineData = async (
+  req: Request<{}, {}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+  } catch (errror) {
+    next(errror);
   }
 };
