@@ -1,4 +1,3 @@
-import { SignInPayload, SignUpPayload } from "@/types/global.js";
 import { db } from "../..//config/database.ts";
 import { JWT_EXPIRES_IN, JWT_SECRET } from "../../config/env.ts";
 import { users } from "../../models/schema.ts";
@@ -7,16 +6,8 @@ import { eq } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
-
-class AppError extends Error {
-  statusCode: number;
-  constructor(message: string, statusCode: number) {
-    super(message),
-      (this.statusCode = statusCode),
-      (this.name = this.constructor.name),
-      Error.captureStackTrace(this, this.constructor);
-  }
-}
+import { AppError } from "../../types/middleware/error.types.ts";
+import type { SignInPayload, SignUpPayload } from "../../types/global.d.ts";
 
 //Sign Up - Controller
 export const SignUp = async (

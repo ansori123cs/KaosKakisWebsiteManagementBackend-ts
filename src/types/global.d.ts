@@ -1,5 +1,3 @@
-// src/types/global.d.ts
-// Re-export semua types utama
 export * from "./api/response.types.ts";
 export * from "./api/auth.types.ts";
 export * from "./save/master/user.types.ts";
