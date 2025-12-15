@@ -5,31 +5,33 @@ export interface BaseEntity {
   id: number;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date;
 }
 
 // Base entity dengan audit trail
 export interface AuditableEntity extends BaseEntity {
   createdBy?: number;
   updatedBy?: number;
-  deletedBy?: number;
 }
 
 // Status enums umum
-export enum Status {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  PENDING = "pending",
-  DELETED = "deleted",
-}
+const STATUS = {
+  ACTIVE: 1,
+  INACTIVE: 0,
+  PENDING: 2,
+  DELETED: -1,
+} as const;
 
-export enum RecordStatus {
-  DRAFT = "draft",
-  PENDING_REVIEW = "pending_review",
-  APPROVED = "approved",
-  REJECTED = "rejected",
-  ARCHIVED = "archived",
-}
+export type Status = (typeof STATUS)[keyof typeof STATUS];
+
+const RECORDSTATUS = {
+  DRAFT: "draft",
+  PENDING_REVIEW: "pending_review",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  ARCHIVED: "archived",
+} as const;
+
+export type RecordStatus = (typeof RECORDSTATUS)[keyof typeof RECORDSTATUS];
 
 // Soft delete interface
 export interface SoftDeletable {
