@@ -1,14 +1,14 @@
 import { db } from "../../config/database.ts";
-import { jenisMesin } from "../../models/schema.ts";
+import { jenisWarna } from "../../models/schema.ts";
 import { asc, count, eq } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
-import type {
-  MachineCreateInput,
-  MachineUpdateInput,
-} from "../../types/save/master/machine.types.ts";
 import { AppError } from "../../types/middleware/error.types.ts";
+import type {
+  ColorCreateInput,
+  ColorUpdateInput,
+} from "../../types/save/master/color.types.ts";
 
-export const getMachineData = async (
+export const getColorData = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -20,20 +20,20 @@ export const getMachineData = async (
 
     const rows = await db
       .select()
-      .from(jenisMesin)
-      .where(eq(jenisMesin.isDeleted, false))
-      .orderBy(asc(jenisMesin.nama))
+      .from(jenisWarna)
+      .where(eq(jenisWarna.isDeleted, false))
+      .orderBy(asc(jenisWarna.nama))
       .limit(limit)
       .offset(offset);
 
-    const [{ total }] = await db.select({ total: count() }).from(jenisMesin);
+    const [{ total }] = await db.select({ total: count() }).from(jenisWarna);
 
     const totalPages = Math.ceil(total / limit);
 
     if (rows.length === 0) {
       return res.status(200).json({
         success: true,
-        message: "No machine data found",
+        message: "No color data found",
         data: {
           rows: [],
           pagination: {
@@ -47,7 +47,7 @@ export const getMachineData = async (
 
     res.status(200).json({
       success: true,
-      message: "Machine data retrieved successfully",
+      message: "Color data retrieved successfully",
       data: {
         rows,
         pagination: {
@@ -65,7 +65,7 @@ export const getMachineData = async (
   }
 };
 
-export const getMachineDetails = async (
+export const getColorDetails = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -73,22 +73,22 @@ export const getMachineDetails = async (
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
-      throw new AppError("Invalid machine ID", 400);
+      throw new AppError("Invalid color ID", 400);
     }
 
     const [detailMasterData] = await db
-      .select({ nama: jenisMesin.nama, kode_mesin: jenisMesin.kodeMesin })
-      .from(jenisMesin)
-      .where(eq(jenisMesin.id, id))
+      .select({ nama: jenisWarna.nama, kode_warna: jenisWarna.kodeWarna })
+      .from(jenisWarna)
+      .where(eq(jenisWarna.id, id))
       .limit(1);
 
     if (!detailMasterData) {
-      throw new AppError("Machine not found", 404);
+      throw new AppError("Color not found", 404);
     }
 
     res.status(200).json({
       success: true,
-      message: "Machine details retrieved successfully",
+      message: "Color details retrieved successfully",
       data: {
         detailMasterData,
       },
@@ -98,36 +98,36 @@ export const getMachineDetails = async (
   }
 };
 
-export const newMachineData = async (
-  req: Request<{}, {}, MachineCreateInput>,
+export const newColorData = async (
+  req: Request<{}, {}, ColorCreateInput>,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const payload = req.body;
 
-    if (!payload || !payload.nama || !payload.kode_mesin) {
+    if (!payload || !payload.nama || !payload.kode_warna) {
       throw new AppError("All fields are required", 400);
     }
 
     const [newMasterData] = await db
-      .insert(jenisMesin)
+      .insert(jenisWarna)
       .values({
         nama: payload.nama.trim(),
-        kodeMesin: payload.kode_mesin.trim(),
+        kodeWarna: payload.kode_warna.trim(),
         status: payload.status ?? 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
       .returning({
-        nama: jenisMesin.nama,
+        nama: jenisWarna.nama,
       });
 
     res.status(201).json({
       success: true,
-      message: "Machine data created successfully",
+      message: "Color data created successfully",
       data: {
-        machine: {
+        color: {
           name: newMasterData.nama,
         },
       },
@@ -137,8 +137,8 @@ export const newMachineData = async (
   }
 };
 
-export const updateMachineData = async (
-  req: Request<{}, {}, MachineUpdateInput>,
+export const updateColorData = async (
+  req: Request<{}, {}, ColorUpdateInput>,
   res: Response,
   next: NextFunction
 ) => {
@@ -148,7 +148,7 @@ export const updateMachineData = async (
     if (
       !payload ||
       !payload.id ||
-      (!payload.nama && !payload.kode_mesin && payload.status === undefined)
+      (!payload.nama && !payload.kode_warna && payload.status === undefined)
     ) {
       throw new AppError(
         "ID and at least one field to update are required",
@@ -164,8 +164,8 @@ export const updateMachineData = async (
       updateData.nama = payload.nama.trim();
     }
 
-    if (payload.kode_mesin !== undefined) {
-      updateData.kodeMesin = payload.kode_mesin.trim();
+    if (payload.kode_warna !== undefined) {
+      updateData.kodeWarna = payload.kode_warna.trim();
     }
 
     if (payload.status !== undefined) {
@@ -173,22 +173,22 @@ export const updateMachineData = async (
     }
 
     const [updatedMasterData] = await db
-      .update(jenisMesin)
+      .update(jenisWarna)
       .set(updateData)
-      .where(eq(jenisMesin.id, payload.id))
+      .where(eq(jenisWarna.id, payload.id))
       .returning({
-        nama: jenisMesin.nama,
+        nama: jenisWarna.nama,
       });
 
     if (!updatedMasterData) {
-      throw new AppError("Machine not found", 404);
+      throw new AppError("Color not found", 404);
     }
 
     res.status(200).json({
       success: true,
-      message: "Machine data updated successfully",
+      message: "Color data updated successfully",
       data: {
-        machine: {
+        color: {
           name: updatedMasterData.nama,
         },
       },
@@ -199,7 +199,7 @@ export const updateMachineData = async (
 };
 
 // Soft delete
-export const deleteMachineData = async (
+export const deleteColorData = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -208,30 +208,30 @@ export const deleteMachineData = async (
     const payload = req.body;
 
     if (!payload || !payload.id) {
-      throw new AppError("Machine ID is required", 400);
+      throw new AppError("Color ID is required", 400);
     }
 
     const [deletedMasterData] = await db
-      .update(jenisMesin)
+      .update(jenisWarna)
       .set({
         status: 0,
         isDeleted: true,
         deletedAt: new Date().toISOString(),
       })
-      .where(eq(jenisMesin.id, payload.id))
+      .where(eq(jenisWarna.id, payload.id))
       .returning({
-        nama: jenisMesin.nama,
+        nama: jenisWarna.nama,
       });
 
     if (!deletedMasterData) {
-      throw new AppError("Machine not found", 404);
+      throw new AppError("Color not found", 404);
     }
 
     res.status(200).json({
       success: true,
-      message: "Machine data deleted successfully",
+      message: "Color data deleted successfully",
       data: {
-        machine: {
+        color: {
           name: deletedMasterData.nama,
         },
       },
@@ -242,7 +242,7 @@ export const deleteMachineData = async (
 };
 
 // Permanent delete
-export const deleteMachineDataPermanent = async (
+export const deleteColorDataPermanent = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -251,25 +251,25 @@ export const deleteMachineDataPermanent = async (
     const payload = req.body;
 
     if (!payload || !payload.id) {
-      throw new AppError("Machine ID is required", 400);
+      throw new AppError("Color ID is required", 400);
     }
 
     const [deletedMasterData] = await db
-      .delete(jenisMesin)
-      .where(eq(jenisMesin.id, payload.id))
+      .delete(jenisWarna)
+      .where(eq(jenisWarna.id, payload.id))
       .returning({
-        nama: jenisMesin.nama,
+        nama: jenisWarna.nama,
       });
 
     if (!deletedMasterData) {
-      throw new AppError("Machine not found", 404);
+      throw new AppError("Color not found", 404);
     }
 
     res.status(200).json({
       success: true,
-      message: "Machine data permanently deleted successfully",
+      message: "Color data permanently deleted successfully",
       data: {
-        machine: {
+        color: {
           name: deletedMasterData.nama,
         },
       },

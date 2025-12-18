@@ -7,7 +7,6 @@ import {
   updateMachineData,
 } from "../../controllers/master/master.machine.controller.ts";
 import { Router } from "express";
-import type { Request, Response, NextFunction } from "express";
 
 const machineRouter = Router();
 
@@ -19,6 +18,6 @@ machineRouter.get("/:id", authorize, getMachineDetails);
 
 machineRouter.put("/update/:id", authorize, updateMachineData);
 
-machineRouter.post("/delete/:id", deleteMachineData);
+machineRouter.post("/delete/:id", authorize, deleteMachineData);
 
 export default machineRouter;

@@ -1,15 +1,15 @@
 import { relations } from "drizzle-orm/relations";
-import { jenisBahan, kaosKaki, kaosKakiVariasiDetail, pesananDetail, pesanan, fotoKaosKaki, jenisMesin, dataMesin, stokKaosKaki, ukuran, warna } from "./schema";
+import { jenisBahan, kaosKaki, kaosKakiDetailVariasi, pesananDetail, pesanan, kaosKakiDetailFoto, jenisMesin, kaosKakiDetailMesin, jenisUkuran, jenisWarna, kaosKakiStok } from "./schema";
 
 export const kaosKakiRelations = relations(kaosKaki, ({one, many}) => ({
 	jenisBahan: one(jenisBahan, {
 		fields: [kaosKaki.jenisBahanId],
 		references: [jenisBahan.id]
 	}),
-	fotoKaosKakis: many(fotoKaosKaki),
-	dataMesins: many(dataMesin),
-	stokKaosKakis: many(stokKaosKaki),
-	kaosKakiVariasiDetails: many(kaosKakiVariasiDetail),
+	kaosKakiDetailFotos: many(kaosKakiDetailFoto),
+	kaosKakiDetailMesins: many(kaosKakiDetailMesin),
+	kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
+	kaosKakiStoks: many(kaosKakiStok),
 }));
 
 export const jenisBahanRelations = relations(jenisBahan, ({many}) => ({
@@ -17,9 +17,9 @@ export const jenisBahanRelations = relations(jenisBahan, ({many}) => ({
 }));
 
 export const pesananDetailRelations = relations(pesananDetail, ({one}) => ({
-	kaosKakiVariasiDetail: one(kaosKakiVariasiDetail, {
+	kaosKakiDetailVariasi: one(kaosKakiDetailVariasi, {
 		fields: [pesananDetail.kaosKakiVariasiId],
-		references: [kaosKakiVariasiDetail.id]
+		references: [kaosKakiDetailVariasi.id]
 	}),
 	pesanan: one(pesanan, {
 		fields: [pesananDetail.pesananId],
@@ -27,19 +27,19 @@ export const pesananDetailRelations = relations(pesananDetail, ({one}) => ({
 	}),
 }));
 
-export const kaosKakiVariasiDetailRelations = relations(kaosKakiVariasiDetail, ({one, many}) => ({
+export const kaosKakiDetailVariasiRelations = relations(kaosKakiDetailVariasi, ({one, many}) => ({
 	pesananDetails: many(pesananDetail),
 	kaosKaki: one(kaosKaki, {
-		fields: [kaosKakiVariasiDetail.kaosKakiId],
+		fields: [kaosKakiDetailVariasi.kaosKakiId],
 		references: [kaosKaki.id]
 	}),
-	ukuran: one(ukuran, {
-		fields: [kaosKakiVariasiDetail.ukuranId],
-		references: [ukuran.id]
+	jenisUkuran: one(jenisUkuran, {
+		fields: [kaosKakiDetailVariasi.ukuranId],
+		references: [jenisUkuran.id]
 	}),
-	warna: one(warna, {
-		fields: [kaosKakiVariasiDetail.warnaId],
-		references: [warna.id]
+	jenisWarna: one(jenisWarna, {
+		fields: [kaosKakiDetailVariasi.warnaId],
+		references: [jenisWarna.id]
 	}),
 }));
 
@@ -47,49 +47,49 @@ export const pesananRelations = relations(pesanan, ({many}) => ({
 	pesananDetails: many(pesananDetail),
 }));
 
-export const fotoKaosKakiRelations = relations(fotoKaosKaki, ({one}) => ({
+export const kaosKakiDetailFotoRelations = relations(kaosKakiDetailFoto, ({one}) => ({
 	kaosKaki: one(kaosKaki, {
-		fields: [fotoKaosKaki.kaosKakiId],
+		fields: [kaosKakiDetailFoto.kaosKakiId],
 		references: [kaosKaki.id]
 	}),
 }));
 
-export const dataMesinRelations = relations(dataMesin, ({one}) => ({
+export const kaosKakiDetailMesinRelations = relations(kaosKakiDetailMesin, ({one}) => ({
 	jenisMesin: one(jenisMesin, {
-		fields: [dataMesin.jenisMesinId],
+		fields: [kaosKakiDetailMesin.jenisMesinId],
 		references: [jenisMesin.id]
 	}),
 	kaosKaki: one(kaosKaki, {
-		fields: [dataMesin.kaosKakiId],
+		fields: [kaosKakiDetailMesin.kaosKakiId],
 		references: [kaosKaki.id]
 	}),
 }));
 
 export const jenisMesinRelations = relations(jenisMesin, ({many}) => ({
-	dataMesins: many(dataMesin),
+	kaosKakiDetailMesins: many(kaosKakiDetailMesin),
 }));
 
-export const stokKaosKakiRelations = relations(stokKaosKaki, ({one}) => ({
+export const jenisUkuranRelations = relations(jenisUkuran, ({many}) => ({
+	kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
+	kaosKakiStoks: many(kaosKakiStok),
+}));
+
+export const jenisWarnaRelations = relations(jenisWarna, ({many}) => ({
+	kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
+	kaosKakiStoks: many(kaosKakiStok),
+}));
+
+export const kaosKakiStokRelations = relations(kaosKakiStok, ({one}) => ({
 	kaosKaki: one(kaosKaki, {
-		fields: [stokKaosKaki.idKaos],
+		fields: [kaosKakiStok.idKaos],
 		references: [kaosKaki.id]
 	}),
-	ukuran: one(ukuran, {
-		fields: [stokKaosKaki.idUkuran],
-		references: [ukuran.id]
+	jenisUkuran: one(jenisUkuran, {
+		fields: [kaosKakiStok.idUkuran],
+		references: [jenisUkuran.id]
 	}),
-	warna: one(warna, {
-		fields: [stokKaosKaki.idWarna],
-		references: [warna.id]
+	jenisWarna: one(jenisWarna, {
+		fields: [kaosKakiStok.idWarna],
+		references: [jenisWarna.id]
 	}),
-}));
-
-export const ukuranRelations = relations(ukuran, ({many}) => ({
-	stokKaosKakis: many(stokKaosKaki),
-	kaosKakiVariasiDetails: many(kaosKakiVariasiDetail),
-}));
-
-export const warnaRelations = relations(warna, ({many}) => ({
-	stokKaosKakis: many(stokKaosKaki),
-	kaosKakiVariasiDetails: many(kaosKakiVariasiDetail),
 }));

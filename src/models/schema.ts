@@ -1,4 +1,4 @@
-import { pgTable, unique, serial, varchar, text, integer, timestamp, boolean, foreignKey, date, check, numeric, bigint } from "drizzle-orm/pg-core"
+import { pgTable, unique, serial, varchar, text, integer, timestamp, boolean, foreignKey, date, check, numeric, bigint, uniqueIndex } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -26,6 +26,8 @@ export const kaosKaki = pgTable("kaos_kaki", {
 	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
 	kodeKaosKaki: text("kode_kaos_kaki"),
 	status: integer(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
 	foreignKey({
 			columns: [table.jenisBahanId],
@@ -40,26 +42,38 @@ export const jenisBahan = pgTable("jenis_bahan", {
 	nama: varchar({ length: 255 }).notNull(),
 	kodeBahan: text("kode_bahan"),
 	status: integer(),
+	createdAt: timestamp({ withTimezone: true, mode: 'string' }),
+	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
 	unique("jenis_bahan_nama_key").on(table.nama),
 ]);
 
-export const ukuran = pgTable("ukuran", {
-	id: serial().primaryKey().notNull(),
-	nama: varchar({ length: 255 }).notNull(),
-	kodeUkuran: text("kode_ukuran"),
-	status: integer(),
-}, (table) => [
-	unique("ukuran_nama_key").on(table.nama),
-]);
-
-export const warna = pgTable("warna", {
+export const jenisWarna = pgTable("jenis_warna", {
 	id: serial().primaryKey().notNull(),
 	nama: varchar({ length: 255 }).notNull(),
 	kodeWarna: text("kode_warna"),
 	status: integer(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
 	unique("warna_nama_key").on(table.nama),
+]);
+
+export const jenisUkuran = pgTable("jenis_ukuran", {
+	id: serial().primaryKey().notNull(),
+	nama: varchar({ length: 255 }).notNull(),
+	kodeUkuran: text("kode_ukuran"),
+	status: integer(),
+	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+}, (table) => [
+	unique("ukuran_nama_key").on(table.nama),
 ]);
 
 export const pesanan = pgTable("pesanan", {
@@ -69,6 +83,9 @@ export const pesanan = pgTable("pesanan", {
 	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow(),
 	status: integer(),
 	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+	noTelp: text("no_telp"),
 });
 
 export const pesananDetail = pgTable("pesanan_detail", {
@@ -80,7 +97,7 @@ export const pesananDetail = pgTable("pesanan_detail", {
 }, (table) => [
 	foreignKey({
 			columns: [table.kaosKakiVariasiId],
-			foreignColumns: [kaosKakiVariasiDetail.id],
+			foreignColumns: [kaosKakiDetailVariasi.id],
 			name: "pesanan_detail_kaos_kaki_variasi_id_fkey"
 		}),
 	foreignKey({
@@ -92,13 +109,15 @@ export const pesananDetail = pgTable("pesanan_detail", {
 	check("pesanan_detail_jumlah_check", sql`jumlah > 0`),
 ]);
 
-export const fotoKaosKaki = pgTable("foto_kaos_kaki", {
+export const kaosKakiDetailFoto = pgTable("kaos_kaki_detail_foto", {
 	id: serial().primaryKey().notNull(),
 	kaosKakiId: integer("kaos_kaki_id").notNull(),
 	url: text().notNull(),
 	isPrimary: boolean("is_primary").default(false),
 	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).notNull(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
 	foreignKey({
 			columns: [table.kaosKakiId],
@@ -107,13 +126,15 @@ export const fotoKaosKaki = pgTable("foto_kaos_kaki", {
 		}).onDelete("cascade"),
 ]);
 
-export const dataMesin = pgTable("data_mesin", {
+export const kaosKakiDetailMesin = pgTable("kaos_kaki_detail_mesin", {
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({ name: "data_mesin_id_seq1", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
 	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	kaosKakiId: integer("kaos_kaki_id"),
 	jenisMesinId: integer("jenis_mesin_id"),
 	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
 	foreignKey({
 			columns: [table.jenisMesinId],
@@ -147,37 +168,13 @@ export const users = pgTable("users", {
 	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow(),
 	role: varchar().notNull(),
-});
-
-export const stokKaosKaki = pgTable("stok_kaos_kaki", {
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity({ name: "stok_kaos_kaki_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 9223372036854775807, cache: 1 }),
-	idKaos: integer("id_kaos"),
-	idUkuran: integer("id_ukuran"),
-	idWarna: integer("id_warna"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	stok: bigint({ mode: "number" }),
-	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
-	foreignKey({
-			columns: [table.idKaos],
-			foreignColumns: [kaosKaki.id],
-			name: "stok_kaos_kaki_id_kaos_fkey"
-		}),
-	foreignKey({
-			columns: [table.idUkuran],
-			foreignColumns: [ukuran.id],
-			name: "stok_kaos_kaki_id_ukuran_fkey"
-		}),
-	foreignKey({
-			columns: [table.idWarna],
-			foreignColumns: [warna.id],
-			name: "stok_kaos_kaki_id_warna_fkey"
-		}),
+	uniqueIndex("user_deleted_at_idx").using("btree", table.deletedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`("deletedAt" IS NULL)`),
 ]);
 
-export const kaosKakiVariasiDetail = pgTable("kaos_kaki_variasi_detail", {
+export const kaosKakiDetailVariasi = pgTable("kaos_kaki_detail_variasi", {
 	id: serial().primaryKey().notNull(),
 	kaosKakiId: integer("kaos_kaki_id").notNull(),
 	ukuranId: integer("ukuran_id").notNull(),
@@ -190,13 +187,41 @@ export const kaosKakiVariasiDetail = pgTable("kaos_kaki_variasi_detail", {
 		}).onDelete("cascade"),
 	foreignKey({
 			columns: [table.ukuranId],
-			foreignColumns: [ukuran.id],
+			foreignColumns: [jenisUkuran.id],
 			name: "kaos_kaki_variasi_ukuran_id_fkey"
 		}),
 	foreignKey({
 			columns: [table.warnaId],
-			foreignColumns: [warna.id],
+			foreignColumns: [jenisWarna.id],
 			name: "kaos_kaki_variasi_warna_id_fkey"
 		}),
 	unique("uk_variasi").on(table.kaosKakiId, table.ukuranId, table.warnaId),
+]);
+
+export const kaosKakiStok = pgTable("kaos_kaki_stok", {
+	id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "stok_kaos_kaki_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
+	idKaos: integer("id_kaos"),
+	idUkuran: integer("id_ukuran"),
+	idWarna: integer("id_warna"),
+	stok: integer(),
+	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	isDeleted: boolean(),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.idKaos],
+			foreignColumns: [kaosKaki.id],
+			name: "stok_kaos_kaki_id_kaos_fkey"
+		}),
+	foreignKey({
+			columns: [table.idUkuran],
+			foreignColumns: [jenisUkuran.id],
+			name: "stok_kaos_kaki_id_ukuran_fkey"
+		}),
+	foreignKey({
+			columns: [table.idWarna],
+			foreignColumns: [jenisWarna.id],
+			name: "stok_kaos_kaki_id_warna_fkey"
+		}),
 ]);

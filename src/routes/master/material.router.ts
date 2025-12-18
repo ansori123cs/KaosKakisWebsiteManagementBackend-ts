@@ -1,46 +1,23 @@
-import { getMachineData } from "@/controllers/master/master.machine.controller.ts";
+import { authorize } from "../../middlewares/auth.middleware.ts";
 import { Router } from "express";
-import type { Request, Response, NextFunction } from "express";
+import {
+  deleteMaterialData,
+  getMaterialData,
+  getMaterialDetails,
+  newMaterialData,
+  updateMaterialData,
+} from "../../controllers/master/master.material.controller.ts";
 
 const materialRouter = Router();
 
-materialRouter.get("/", getMachineData);
+materialRouter.get("/", authorize, getMaterialData);
 
-materialRouter.post(
-  "/create",
-  (req: Request, res: Response, next: NextFunction) => {
-    res.status(201).json({ success: true, message: "make new machine master" });
-  }
-);
+materialRouter.post("/create", authorize, newMaterialData);
 
-materialRouter.get(
-  "/:id",
-  (req: Request, res: Response, next: NextFunction) => {
-    res.status(201).json({
-      success: true,
-      message: `get specific machine master id = ${req.params}`,
-    });
-  }
-);
+materialRouter.get("/:id", authorize, getMaterialDetails);
 
-materialRouter.put(
-  "/update/:id",
-  (req: Request, res: Response, next: NextFunction) => {
-    res.status(201).json({
-      success: true,
-      message: `update machine master id = ${req.params}`,
-    });
-  }
-);
+materialRouter.put("/update/:id", authorize, updateMaterialData);
 
-materialRouter.post(
-  "/delete/:id",
-  (req: Request, res: Response, next: NextFunction) => {
-    res.status(201).json({
-      success: true,
-      message: `delete machine master id = ${req.params}`,
-    });
-  }
-);
+materialRouter.post("/delete/:id", authorize, deleteMaterialData);
 
 export default materialRouter;
