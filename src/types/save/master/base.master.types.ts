@@ -1,6 +1,3 @@
-// src/types/master/base.types.ts
-
-// Base entity dengan timestamps
 export interface BaseEntity {
   id: number;
   createdAt: Date;
