@@ -24,6 +24,10 @@ export interface KaosKakiCreateInput {
   status: Status;
 }
 
+export interface FotoKaosKaki {
+  url: string;
+  is_primary: boolean;
+}
 export interface KaosKakiUpdateInput extends Partial<KaosKakiCreateInput> {
   id: number;
 }
@@ -31,11 +35,6 @@ export interface KaosKakiUpdateInput extends Partial<KaosKakiCreateInput> {
 export interface BulkKaosKakiUpdate {
   ids: number[];
   data: Partial<KaosKakiUpdateInput>;
-}
-
-export interface FotoKaosKaki {
-  url: string;
-  is_primary: boolean;
 }
 
 export interface KaosKakiQueryParams {

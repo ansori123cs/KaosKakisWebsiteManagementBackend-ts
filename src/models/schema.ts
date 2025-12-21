@@ -115,7 +115,7 @@ export const kaosKakiDetailFoto = pgTable("kaos_kaki_detail_foto", {
 	url: text().notNull(),
 	isPrimary: boolean("is_primary").default(false),
 	createdAt: timestamp({ withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp({ withTimezone: true, mode: 'string' }).notNull(),
+	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
 	isDeleted: boolean(),
 	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
