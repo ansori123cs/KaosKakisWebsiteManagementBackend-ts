@@ -267,3 +267,15 @@ export const newkaosKakiData = async (
     next(error);
   }
 };
+
+export const updatekaosKakiData = async (
+  req: Request<{}, {}, KaosKakiCreateInput>,
+  res: Response,
+  next: NextFunction
+) => {};
+
+export const deletekaosKakiData = async (
+  req: Request<{}, {}, KaosKakiCreateInput>,
+  res: Response,
+  next: NextFunction
+) => {};
