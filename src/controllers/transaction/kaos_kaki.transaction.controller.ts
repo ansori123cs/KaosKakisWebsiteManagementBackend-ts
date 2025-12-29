@@ -9,7 +9,10 @@ import { db } from "../../config/database.ts";
 import type { Request, Response, NextFunction } from "express";
 import { or, eq, count } from "drizzle-orm";
 import { AppError } from "../../types/middleware/error.types.ts";
-import type { KaosKakiCreateInput } from "../../types/save/transaction/kaos_kaki.types.ts";
+import type {
+  KaosKakiCreateInput,
+  KaosKakiUpdateInput1,
+} from "../../types/save/transaction/kaos_kaki.types.ts";
 
 export const getKaosKakiData = async (
   req: Request,
@@ -269,10 +272,139 @@ export const newkaosKakiData = async (
 };
 
 export const updatekaosKakiData = async (
-  req: Request<{}, {}, KaosKakiCreateInput>,
+  req: Request<{}, {}, KaosKakiUpdateInput1>,
   res: Response,
   next: NextFunction
-) => {};
+) => {
+  try {
+    const payload = req.body;
+
+    if (!payload || !payload.id) {
+      throw new AppError("ID and at least one filed update are required", 400);
+    }
+
+    const checkKaosKakiData = await db.query.kaosKaki.findFirst({
+      where: eq(kaosKaki.id, payload.id),
+      with: {
+        jenisBahan: {
+          columns: {
+            id: true,
+            nama: true,
+          },
+        },
+        kaosKakiDetailFotos: {
+          columns: {
+            id: true,
+            isPrimary: true,
+            url: true,
+          },
+        },
+        kaosKakiDetailMesins: {
+          columns: {
+            id: true,
+          },
+          with: {
+            jenisMesin: {
+              columns: {
+                id: true,
+                nama: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    await db.transaction(async (tx) => {
+      const updateData: Record<string, any> = {
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (
+        payload.nama !== undefined &&
+        payload.nama !== checkKaosKakiData?.nama
+      ) {
+        updateData.nama = payload.nama.trim();
+      }
+      if (
+        payload.keterangan !== undefined &&
+        payload.keterangan !== checkKaosKakiData?.keterangan
+      ) {
+        updateData.keterangan = payload.keterangan.trim();
+      }
+
+      if (
+        payload.jenis_bahan !== undefined &&
+        payload.jenis_bahan !== checkKaosKakiData?.jenisBahanId
+      ) {
+        updateData.jenisBahanId = payload.jenis_bahan;
+      }
+
+      if (
+        payload.kode_kaos_kaki !== undefined &&
+        payload.kode_kaos_kaki !== checkKaosKakiData?.kodeKaosKaki
+      ) {
+        updateData.kodeKaosKaki = payload.kode_kaos_kaki.trim();
+      }
+
+      if (
+        payload.last_order !== undefined &&
+        payload.last_order !== checkKaosKakiData?.lastOrderDate
+      ) {
+        updateData.lastOrderDate = payload.last_order;
+      }
+
+      if (
+        payload.status !== undefined &&
+        payload.status !== checkKaosKakiData?.status
+      ) {
+        updateData.status = payload.status;
+      }
+
+      if (payload.mesin !== undefined) {
+        let arrayKodeMesin = [];
+        payload.mesin.map((kode_mesin) => {
+          if (
+            checkKaosKakiData?.kaosKakiDetailMesins.find(
+              (kodeMesin) => kodeMesin.id !== kode_mesin
+            )
+          ) {
+            arrayKodeMesin.push(kode_mesin);
+          }
+        });
+      }
+
+      if (payload.foto !== undefined) {
+        let fotoUpdate = [];
+        payload.foto.map((foto) => {
+          if (
+            checkKaosKakiData?.kaosKakiDetailFotos.find(
+              (checkFoto) => checkFoto.url !== foto.url
+            )
+          ) {
+            fotoUpdate.push(foto);
+          }
+        });
+      }
+      const [updatedKaosKakiData] = await tx
+        .update(kaosKaki)
+        .set(updateData)
+        .where(eq(kaosKaki.id, payload.id))
+        .returning({ nama: kaosKaki.nama });
+
+      if (!updatedKaosKakiData) throw new AppError("updated failed", 400);
+      res.status(200).json({
+        success: true,
+        message: "Kaos Kaki Data updated successfully",
+        data: {
+          KaosKakiName: updatedKaosKakiData.nama,
+        },
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const deletekaosKakiData = async (
   req: Request<{}, {}, KaosKakiCreateInput>,

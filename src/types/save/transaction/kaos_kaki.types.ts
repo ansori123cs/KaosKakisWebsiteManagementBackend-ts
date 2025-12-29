@@ -28,13 +28,64 @@ export interface FotoKaosKaki {
   url: string;
   is_primary: boolean;
 }
-export interface KaosKakiUpdateInput extends Partial<KaosKakiCreateInput> {
+export interface KaosKakiUpdateInput1 extends Partial<KaosKakiCreateInput> {
   id: number;
 }
 
 export interface BulkKaosKakiUpdate {
   ids: number[];
   data: Partial<KaosKakiUpdateInput>;
+}
+
+export interface KaosKakiUpdateInput {
+  id: number;
+  nama?: string;
+  keterangan?: string;
+  jenis_bahan?: number;
+  kode_kaos_kaki?: string;
+  last_order?: string;
+  status?: string;
+  mesin?: number[];
+  foto?: Array<{
+    url: string;
+    isPrimary?: boolean;
+  }>;
+}
+
+export interface KaosKakiExistingData {
+  id: number;
+  nama: string;
+  keterangan: string;
+  jenisBahanId: number;
+  kodeKaosKaki: string;
+  lastOrderDate: string;
+  status: string;
+  jenisBahan?: {
+    id: number;
+    nama: string;
+  };
+  kaosKakiDetailFotos?: Array<{
+    id: number;
+    isPrimary: boolean;
+    url: string;
+  }>;
+  kaosKakiDetailMesins?: Array<{
+    id: number;
+    jenisMesin: {
+      id: number;
+      nama: string;
+    };
+  }>;
+}
+
+export interface UpdateKaosKakiData {
+  updatedAt: string;
+  nama?: string;
+  keterangan?: string;
+  jenisBahanId?: string;
+  kodeKaosKaki?: string;
+  lastOrderDate?: Date;
+  status?: string;
 }
 
 export interface KaosKakiQueryParams {
