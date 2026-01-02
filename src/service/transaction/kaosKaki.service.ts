@@ -137,7 +137,7 @@ export class KaosKakiUpdateService {
    */
   private getMachineUpdates(
     newMachineIds: string[] = [],
-    existingMachines: KaosKakiExistingData["kaosKakiDetailMesin"] = []
+    existingMachines: KaosKakiExistingData["kaosKakiDetailMesins"] = []
   ): {
     machinesToAdd: string[];
     machinesToRemove: string[];
@@ -146,12 +146,12 @@ export class KaosKakiUpdateService {
 
     // Find machines to add (in new but not in existing)
     const machinesToAdd = newMachineIds.filter(
-      (machineId) => !existingMachineIds.includes(machineId)
+      (machineId) => !existingMachineIds.includes(Number(machineId))
     );
 
     // Find machines to remove (in existing but not in new)
     const machinesToRemove = existingMachineIds.filter(
-      (machineId) => !newMachineIds.includes(machineId)
+      (machineId) => !newMachineIds.includes(machineId.toString())
     );
 
     return { machinesToAdd, machinesToRemove };
