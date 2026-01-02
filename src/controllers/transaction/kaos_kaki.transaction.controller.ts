@@ -11,6 +11,7 @@ import { or, eq, count } from "drizzle-orm";
 import { AppError } from "../../types/middleware/error.types.ts";
 import type {
   KaosKakiCreateInput,
+  KaosKakiDeleteInput,
   KaosKakiUpdateInput1,
 } from "../../types/save/transaction/kaos_kaki.types.ts";
 
@@ -279,127 +280,125 @@ export const updatekaosKakiData = async (
   try {
     const payload = req.body;
 
-    if (!payload || !payload.id) {
-      throw new AppError("ID and at least one filed update are required", 400);
+    if (!payload?.id) {
+      throw new AppError("ID and at least one field update are required", 400);
     }
 
     const checkKaosKakiData = await db.query.kaosKaki.findFirst({
       where: eq(kaosKaki.id, payload.id),
       with: {
-        jenisBahan: {
-          columns: {
-            id: true,
-            nama: true,
-          },
-        },
         kaosKakiDetailFotos: {
-          columns: {
-            id: true,
-            isPrimary: true,
-            url: true,
-          },
+          columns: { id: true, url: true },
         },
         kaosKakiDetailMesins: {
-          columns: {
-            id: true,
-          },
+          columns: { id: true },
           with: {
-            jenisMesin: {
-              columns: {
-                id: true,
-                nama: true,
-              },
-            },
+            jenisMesin: { columns: { id: true } },
           },
         },
       },
     });
+
+    if (!checkKaosKakiData) {
+      throw new AppError("Kaos kaki data not found", 404);
+    }
 
     await db.transaction(async (tx) => {
       const updateData: Record<string, any> = {
         updatedAt: new Date().toISOString(),
       };
 
-      if (
-        payload.nama !== undefined &&
-        payload.nama !== checkKaosKakiData?.nama
-      ) {
+      if (payload.nama && payload.nama !== checkKaosKakiData.nama) {
         updateData.nama = payload.nama.trim();
       }
+
       if (
-        payload.keterangan !== undefined &&
-        payload.keterangan !== checkKaosKakiData?.keterangan
+        payload.keterangan &&
+        payload.keterangan !== checkKaosKakiData.keterangan
       ) {
         updateData.keterangan = payload.keterangan.trim();
       }
 
       if (
-        payload.jenis_bahan !== undefined &&
-        payload.jenis_bahan !== checkKaosKakiData?.jenisBahanId
+        payload.jenis_bahan &&
+        payload.jenis_bahan !== checkKaosKakiData.jenisBahanId
       ) {
         updateData.jenisBahanId = payload.jenis_bahan;
       }
 
       if (
-        payload.kode_kaos_kaki !== undefined &&
-        payload.kode_kaos_kaki !== checkKaosKakiData?.kodeKaosKaki
+        payload.kode_kaos_kaki &&
+        payload.kode_kaos_kaki !== checkKaosKakiData.kodeKaosKaki
       ) {
         updateData.kodeKaosKaki = payload.kode_kaos_kaki.trim();
       }
 
       if (
-        payload.last_order !== undefined &&
-        payload.last_order !== checkKaosKakiData?.lastOrderDate
+        payload.last_order &&
+        payload.last_order !== checkKaosKakiData.lastOrderDate
       ) {
-        updateData.lastOrderDate = payload.last_order;
+        updateData.lastOrderDate = new Date(payload.last_order).toISOString();
       }
 
-      if (
-        payload.status !== undefined &&
-        payload.status !== checkKaosKakiData?.status
-      ) {
+      if (payload.status && payload.status !== checkKaosKakiData.status) {
         updateData.status = payload.status;
       }
 
-      if (payload.mesin !== undefined) {
-        let arrayKodeMesin = [];
-        payload.mesin.map((kode_mesin) => {
-          if (
-            checkKaosKakiData?.kaosKakiDetailMesins.find(
-              (kodeMesin) => kodeMesin.id !== kode_mesin
-            )
-          ) {
-            arrayKodeMesin.push(kode_mesin);
+      if (payload.mesin) {
+        for (const mesin of payload.mesin) {
+          const isExist = checkKaosKakiData.kaosKakiDetailMesins.some(
+            (m) => m.jenisMesin?.id === mesin.id_mesin
+          );
+
+          if (!isExist && !mesin.isDeleted) {
+            await tx.insert(kaosKakiDetailMesin).values({
+              kaosKakiId: payload.id,
+              jenisMesinId: mesin.id_mesin,
+            });
           }
-        });
+
+          if (isExist && mesin.isDeleted) {
+            await tx
+              .update(kaosKakiDetailMesin)
+              .set({ isDeleted: true, deletedAt: new Date().toISOString() })
+              .where(eq(kaosKakiDetailMesin.jenisMesinId, mesin.id_mesin));
+          }
+        }
       }
 
-      if (payload.foto !== undefined) {
-        let fotoUpdate = [];
-        payload.foto.map((foto) => {
-          if (
-            checkKaosKakiData?.kaosKakiDetailFotos.find(
-              (checkFoto) => checkFoto.url !== foto.url
-            )
-          ) {
-            fotoUpdate.push(foto);
-          }
-        });
-      }
-      const [updatedKaosKakiData] = await tx
-        .update(kaosKaki)
-        .set(updateData)
-        .where(eq(kaosKaki.id, payload.id))
-        .returning({ nama: kaosKaki.nama });
+      if (payload.foto) {
+        for (const foto of payload.foto) {
+          const isExist = checkKaosKakiData.kaosKakiDetailFotos.some(
+            (f) => f.url === foto.url
+          );
 
-      if (!updatedKaosKakiData) throw new AppError("updated failed", 400);
-      res.status(200).json({
-        success: true,
-        message: "Kaos Kaki Data updated successfully",
-        data: {
-          KaosKakiName: updatedKaosKakiData.nama,
-        },
-      });
+          if (!isExist && !foto.isDeleted) {
+            await tx.insert(kaosKakiDetailFoto).values({
+              kaosKakiId: payload.id,
+              url: foto.url,
+            });
+          }
+
+          if (isExist && foto.isDeleted) {
+            await tx
+              .update(kaosKakiDetailFoto)
+              .set({ isDeleted: true, deletedAt: new Date().toISOString() })
+              .where(eq(kaosKakiDetailFoto.url, foto.url));
+          }
+        }
+      }
+
+      if (Object.keys(updateData).length > 1) {
+        await tx
+          .update(kaosKaki)
+          .set(updateData)
+          .where(eq(kaosKaki.id, payload.id));
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Kaos kaki data updated successfully",
     });
   } catch (error) {
     next(error);
@@ -407,7 +406,60 @@ export const updatekaosKakiData = async (
 };
 
 export const deletekaosKakiData = async (
-  req: Request<{}, {}, KaosKakiCreateInput>,
+  req: Request<{}, {}, KaosKakiDeleteInput>,
   res: Response,
   next: NextFunction
-) => {};
+) => {
+  try {
+    const payload = req.body;
+
+    if (!payload || payload.id === undefined || payload.userId === undefined) {
+      throw new AppError("Error During Delete", 404);
+    }
+
+    await db.transaction(async (tx) => {
+      const checkDuplicate = await tx
+        .select({ id: kaosKaki.id })
+        .from(kaosKaki)
+        .where(eq(kaosKaki.id, payload.id))
+        .limit(1);
+
+      if (checkDuplicate.length > 0) {
+        throw new AppError("Data Doesnt exist", 400);
+      }
+
+      const [deletedKaosKaki] = await tx
+        .update(kaosKaki)
+        .set({
+          status: 0,
+          isDeleted: true,
+          deletedAt: new Date().toISOString(),
+        })
+        .where(eq(kaosKaki.id, payload.id))
+        .returning({
+          id: kaosKaki.id,
+          nama: kaosKaki.nama,
+        });
+
+      await tx
+        .update(kaosKakiDetailMesin)
+        .set({ isDeleted: true, deletedAt: new Date().toISOString() })
+        .where(eq(kaosKaki.id, payload.id));
+
+      await tx
+        .update(kaosKakiDetailFoto)
+        .set({ isDeleted: true, deletedAt: new Date().toISOString() })
+        .where(eq(kaosKaki.id, payload.id));
+
+      res.status(201).json({
+        success: true,
+        message: "Kaos Kaki data deleted successfully",
+        data: {
+          nama: deletedKaosKaki.nama,
+        },
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
