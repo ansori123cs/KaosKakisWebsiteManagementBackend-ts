@@ -1,4 +1,4 @@
-import { pgTable, unique, serial, varchar, text, integer, timestamp, boolean, foreignKey, date, check, numeric, bigint, uniqueIndex } from "drizzle-orm/pg-core"
+import { pgTable, unique, serial, varchar, text, integer, timestamp, boolean, foreignKey, date, check, numeric, bigint, uniqueIndex, uuid, jsonb, inet } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -172,6 +172,22 @@ export const users = pgTable("users", {
 	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
 }, (table) => [
 	uniqueIndex("user_deleted_at_idx").using("btree", table.deletedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`("deletedAt" IS NULL)`),
+]);
+
+export const auditLog = pgTable("audit_log", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	tableName: text("table_name").notNull(),
+	recordId: uuid("record_id").notNull(),
+	action: text().notNull(),
+	userId: uuid("user_id").notNull(),
+	oldData: jsonb("old_data"),
+	newData: jsonb("new_data"),
+	occurredAt: timestamp("occurred_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	requestId: text("request_id"),
+	ipAddress: inet("ip_address"),
+	userAgent: text("user_agent"),
+}, (table) => [
+	check("audit_log_action_check", sql`action = ANY (ARRAY['CREATE'::text, 'UPDATE'::text, 'DELETE'::text, 'SOFT_DELETE'::text, 'RESTORE'::text])`),
 ]);
 
 export const kaosKakiDetailVariasi = pgTable("kaos_kaki_detail_variasi", {

@@ -284,7 +284,7 @@ export const updatekaosKakiData = async (
       throw new AppError("ID and at least one field update are required", 400);
     }
 
-    const checkKaosKakiData = await db.query.kaosKaki.findFirst({
+    const checkKaosKakiData = (await db.query.kaosKaki.findFirst({
       where: eq(kaosKaki.id, payload.id),
       with: {
         kaosKakiDetailFotos: {
@@ -297,7 +297,7 @@ export const updatekaosKakiData = async (
           },
         },
       },
-    });
+    })) as any;
 
     if (!checkKaosKakiData) {
       throw new AppError("Kaos kaki data not found", 404);
@@ -347,7 +347,7 @@ export const updatekaosKakiData = async (
       if (payload.mesin) {
         for (const mesin of payload.mesin) {
           const isExist = checkKaosKakiData.kaosKakiDetailMesins.some(
-            (m) => m.jenisMesin?.id === mesin.id_mesin
+            (m: any) => m.jenisMesin?.id === mesin.id_mesin
           );
 
           if (!isExist && !mesin.isDeleted) {
@@ -369,7 +369,7 @@ export const updatekaosKakiData = async (
       if (payload.foto) {
         for (const foto of payload.foto) {
           const isExist = checkKaosKakiData.kaosKakiDetailFotos.some(
-            (f) => f.url === foto.url
+            (f: any) => f.url === foto.url
           );
 
           if (!isExist && !foto.isDeleted) {
@@ -425,7 +425,7 @@ export const deletekaosKakiData = async (
         .limit(1);
 
       if (checkDuplicate.length > 0) {
-        throw new AppError("Data Doesnt exist", 400);
+        throw new AppError("Data Doesnt exist", 404);
       }
 
       const [deletedKaosKaki] = await tx
