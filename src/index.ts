@@ -12,6 +12,7 @@ import colorRouter from "./routes/master/color.router.ts";
 import sizeRouter from "./routes/master/size.router.ts";
 import materialRouter from "./routes/master/material.router.ts";
 import kaosKakiRouter from "./routes/transaction/kaos_kaki.router.ts";
+import orderRouter from "./routes/transaction/order.router.ts";
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/v1/material", materialRouter);
 
 //transaction router
 app.use("/api/v1/kaos-kaki", kaosKakiRouter);
+app.use("/api/v1/order", orderRouter);
 
 app.use("/", async (req, res, next) => {
   const welcomeMessage = "Welcome To Website Kaos Kaki Management Backend";
