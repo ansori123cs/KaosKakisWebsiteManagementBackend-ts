@@ -16,6 +16,7 @@ import type {
 } from "../../types/save/transaction/kaos_kaki.types.ts";
 import type {
   OrderCreateInput,
+  OrderDeleteInput,
   OrderQueryParams,
   OrderUpdateInput,
 } from "../../types/save/transaction/order.types.ts";
@@ -407,19 +408,7 @@ export const updateOrderData = async (
           columns: {
             isDeleted: true,
             deletedAt: true,
-          },
-          with: {
-            kaosKakiDetailVariasi: {
-              columns: {
-                id: true,
-              },
-              with: {
-                jenisUkuran: {
-                  columns: { id: true, nama: true },
-                },
-                jenisWarna: { columns: { id: true, nama: true } },
-              },
-            },
+            kaosKakiVariasiId: true,
           },
         },
       },
@@ -459,7 +448,7 @@ export const updateOrderData = async (
       if (payload.orderDetails) {
         for (const [index, detail] of payload.orderDetails.entries()) {
           const isExist = checkOrderData.pesananDetails.some(
-            (m: any) => m?.id === detail.id
+            (m: any) => m?.kaosKakiVariasiId === detail.kodeKaosVariasi
           );
 
           if (!isExist && !detail.isDeleted) {
@@ -467,18 +456,18 @@ export const updateOrderData = async (
               pesananId: payload.id,
               hargaSatuan: payload.orderDetails[index].price,
               jumlah: payload.orderDetails[index].amount,
-              kaosKakiVariasiId: payload.orderDetails[index].id,
+              kaosKakiVariasiId: payload.orderDetails[index].kodeKaosVariasi,
               deletedAt: null,
               isDeleted: false,
             });
           }
 
-          // if (isExist && mesin.isDeleted) {
-          //   await tx
-          //     .update(kaosKakiDetailMesin)
-          //     .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-          //     .where(eq(kaosKakiDetailMesin.jenisMesinId, mesin.id_mesin));
-          // }
+          if (isExist && detail.isDeleted) {
+            await tx
+              .update(pesananDetail)
+              .set({ isDeleted: true, deletedAt: new Date().toISOString() })
+              .where(eq(pesananDetail.id, detail.id));
+          }
         }
       }
 
@@ -499,8 +488,8 @@ export const updateOrderData = async (
   }
 };
 
-export const deletekaosKakiData = async (
-  req: Request<{}, {}, KaosKakiDeleteInput>,
+export const deleteOrderData = async (
+  req: Request<{}, {}, OrderDeleteInput>,
   res: Response,
   next: NextFunction
 ) => {
@@ -513,43 +502,38 @@ export const deletekaosKakiData = async (
 
     await db.transaction(async (tx) => {
       const checkDuplicate = await tx
-        .select({ id: kaosKaki.id })
-        .from(kaosKaki)
-        .where(eq(kaosKaki.id, payload.id))
+        .select({ id: pesanan.id })
+        .from(pesanan)
+        .where(eq(pesanan.id, payload.id))
         .limit(1);
 
       if (checkDuplicate.length > 0) {
         throw new AppError("Data Doesnt exist", 404);
       }
 
-      const [deletedKaosKaki] = await tx
-        .update(kaosKaki)
+      const [deletedOrderData] = await tx
+        .update(pesanan)
         .set({
           status: 0,
           isDeleted: true,
           deletedAt: new Date().toISOString(),
         })
-        .where(eq(kaosKaki.id, payload.id))
+        .where(eq(pesanan.id, payload.id))
         .returning({
-          id: kaosKaki.id,
-          nama: kaosKaki.nama,
+          id: pesanan.id,
+          nama: pesanan.namaPemesan,
         });
 
       await tx
-        .update(kaosKakiDetailMesin)
+        .update(pesananDetail)
         .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-        .where(eq(kaosKaki.id, payload.id));
-
-      await tx
-        .update(kaosKakiDetailFoto)
-        .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-        .where(eq(kaosKaki.id, payload.id));
+        .where(eq(pesanan.id, payload.id));
 
       res.status(201).json({
         success: true,
         message: "Kaos Kaki data deleted successfully",
         data: {
-          nama: deletedKaosKaki.nama,
+          nama: deletedOrderData.nama,
         },
       });
     });

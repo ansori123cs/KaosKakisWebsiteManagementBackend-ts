@@ -37,7 +37,7 @@ export interface BulkKaosKakiUpdate {
   data: Partial<OrderUpdateInput>;
 }
 
-export interface KaosKakiDeleteInput {
+export interface OrderDeleteInput {
   id: number;
   userId?: number;
 }
