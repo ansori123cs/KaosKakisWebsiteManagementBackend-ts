@@ -9,18 +9,12 @@ export interface Order extends AuditableEntity {
 }
 
 export interface OrderDetail {
-  id?: number;
+  id: number;
   amount: number;
-  variationDetails: VariationDetails;
-}
-
-export interface VariationDetails {
-  kodeKaosKaki?: number;
-  namaKaosKaki: string;
-  kodeUkuran?: number;
-  ukuran: string;
-  kodeWarna?: number;
-  warna: string;
+  price: number;
+  kodeKaosVariasi: number;
+  isDeleted: boolean;
+  deletedAt: Date;
 }
 
 export interface OrderCreateInput extends AuditableEntity {
@@ -29,6 +23,8 @@ export interface OrderCreateInput extends AuditableEntity {
   noTelpPemesan: string;
   status: number;
   orderDetails: OrderDetail[];
+  isDeleted: boolean;
+  deletedAt: Date;
   userId?: number;
 }
 

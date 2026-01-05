@@ -1,27 +1,14 @@
-import { pgTable, unique, serial, varchar, text, integer, timestamp, boolean, foreignKey, date, check, numeric, bigint, uniqueIndex, uuid, jsonb, inet } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, unique, serial, varchar, integer, text, timestamp, boolean, check, bigint, uniqueIndex, uuid, jsonb, inet } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
-
-export const jenisMesin = pgTable("jenis_mesin", {
-	id: serial().primaryKey().notNull(),
-	nama: varchar({ length: 255 }).notNull(),
-	kodeMesin: text("kode_mesin"),
-	status: integer().default(1),
-	createdAt: timestamp({ withTimezone: true, mode: 'string' }),
-	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
-	isDeleted: boolean().default(false),
-	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
-}, (table) => [
-	unique("data_mesin_nama_key").on(table.nama),
-]);
 
 export const kaosKaki = pgTable("kaos_kaki", {
 	id: serial().primaryKey().notNull(),
 	nama: varchar({ length: 255 }).notNull(),
 	jenisBahanId: integer("jenis_bahan_id"),
 	keterangan: text(),
-	lastOrderDate: date("last_order_date"),
+	lastOrderDate: timestamp("last_order_date", { withTimezone: true, mode: 'string' }),
 	createdAt: timestamp({ withTimezone: true, mode: 'string' }),
 	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
 	kodeKaosKaki: text("kode_kaos_kaki"),
@@ -35,6 +22,19 @@ export const kaosKaki = pgTable("kaos_kaki", {
 			name: "kaos_kaki_jenis_bahan_id_fkey"
 		}),
 	unique("uk_nama_jenis").on(table.nama, table.jenisBahanId),
+]);
+
+export const jenisMesin = pgTable("jenis_mesin", {
+	id: serial().primaryKey().notNull(),
+	nama: varchar({ length: 255 }).notNull(),
+	kodeMesin: text("kode_mesin"),
+	status: integer().default(1),
+	createdAt: timestamp({ withTimezone: true, mode: 'string' }),
+	updatedAt: timestamp({ withTimezone: true, mode: 'string' }),
+	isDeleted: boolean().default(false),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+}, (table) => [
+	unique("data_mesin_nama_key").on(table.nama),
 ]);
 
 export const jenisBahan = pgTable("jenis_bahan", {
@@ -88,27 +88,6 @@ export const pesanan = pgTable("pesanan", {
 	noTelp: text("no_telp"),
 });
 
-export const pesananDetail = pgTable("pesanan_detail", {
-	id: serial().primaryKey().notNull(),
-	pesananId: integer("pesanan_id").notNull(),
-	kaosKakiVariasiId: integer("kaos_kaki_variasi_id").notNull(),
-	jumlah: integer().notNull(),
-	hargaSatuan: numeric("harga_satuan", { precision: 10, scale:  2 }).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.kaosKakiVariasiId],
-			foreignColumns: [kaosKakiDetailVariasi.id],
-			name: "pesanan_detail_kaos_kaki_variasi_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.pesananId],
-			foreignColumns: [pesanan.id],
-			name: "pesanan_detail_pesanan_id_fkey"
-		}).onDelete("cascade"),
-	check("pesanan_detail_harga_satuan_check", sql`harga_satuan > (0)::numeric`),
-	check("pesanan_detail_jumlah_check", sql`jumlah > 0`),
-]);
-
 export const kaosKakiDetailFoto = pgTable("kaos_kaki_detail_foto", {
 	id: serial().primaryKey().notNull(),
 	kaosKakiId: integer("kaos_kaki_id").notNull(),
@@ -124,6 +103,29 @@ export const kaosKakiDetailFoto = pgTable("kaos_kaki_detail_foto", {
 			foreignColumns: [kaosKaki.id],
 			name: "foto_kaos_kaki_kaos_kaki_id_fkey"
 		}).onDelete("cascade"),
+]);
+
+export const pesananDetail = pgTable("pesanan_detail", {
+	id: serial().primaryKey().notNull(),
+	pesananId: integer("pesanan_id").notNull(),
+	kaosKakiVariasiId: integer("kaos_kaki_variasi_id").notNull(),
+	jumlah: integer().notNull(),
+	hargaSatuan: integer("harga_satuan").notNull(),
+	isDeleted: boolean().default(false),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.kaosKakiVariasiId],
+			foreignColumns: [kaosKakiDetailVariasi.id],
+			name: "pesanan_detail_kaos_kaki_variasi_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.pesananId],
+			foreignColumns: [pesanan.id],
+			name: "pesanan_detail_pesanan_id_fkey"
+		}).onDelete("cascade"),
+	check("pesanan_detail_harga_satuan_check", sql`(harga_satuan)::numeric > (0)::numeric`),
+	check("pesanan_detail_jumlah_check", sql`jumlah > 0`),
 ]);
 
 export const kaosKakiDetailMesin = pgTable("kaos_kaki_detail_mesin", {

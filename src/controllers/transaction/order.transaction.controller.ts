@@ -1,6 +1,4 @@
 import {
-  jenisBahan,
-  jenisMesin,
   kaosKaki,
   kaosKakiDetailFoto,
   kaosKakiDetailMesin,
@@ -10,16 +8,16 @@ import {
 } from "../../models/index.ts";
 import { db } from "../../config/database.ts";
 import type { Request, Response, NextFunction } from "express";
-import { or, eq, count, and } from "drizzle-orm";
+import { or, eq, count, and, like, arrayContains, inArray } from "drizzle-orm";
 import { AppError } from "../../types/middleware/error.types.ts";
 import type {
-  KaosKakiCreateInput,
   KaosKakiDeleteInput,
   KaosKakiUpdateInput1,
 } from "../../types/save/transaction/kaos_kaki.types.ts";
 import type {
   OrderCreateInput,
   OrderQueryParams,
+  OrderUpdateInput,
 } from "../../types/save/transaction/order.types.ts";
 
 export const getOrderData = async (
@@ -204,33 +202,98 @@ export const getOrderDetails = async (
   }
 };
 
-export const FormDataKaosKaki = async (
+export const FormDataOrderKaosKaki = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    console.log("here");
-    const jenisMesinList = await db
-      .select({
-        kode: jenisMesin.id,
-        nama: jenisMesin.nama,
-      })
-      .from(jenisMesin);
+    const search = req.query.search as string | undefined;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50; // Default limit lebih besar untuk pencarian
+    const offset = (page - 1) * limit;
 
-    const jenisBahanList = await db
-      .select({
-        kode: jenisBahan.id,
-        nama: jenisBahan.nama,
-      })
-      .from(jenisBahan);
+    let whereCondition = undefined;
+    if (search) {
+      whereCondition = like(kaosKaki.nama, `%${search}%`);
+    }
+
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(kaosKaki)
+      .where(whereCondition);
+
+    const result = await db
+      .select({ id: kaosKaki.id, nama: kaosKaki.nama })
+      .from(kaosKaki)
+      .where(whereCondition)
+      .limit(limit)
+      .offset(offset);
 
     res.status(200).json({
       success: true,
-      message: "Success Load Form Data",
+      message: "Success Load Form Data Kaos Kaki",
       data: {
-        jenisMesinList,
-        jenisBahanList,
+        result,
+        pagination: {
+          page,
+          limit,
+          total: totalResult.count,
+          totalPages: Math.ceil(totalResult.count / limit),
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const FormDataOrderDetailKaosKaki = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      throw new AppError("Invalid Kaos Kaki", 400);
+    }
+
+    const result = await db.query.kaosKaki.findMany({
+      where: eq(kaosKaki.id, id),
+      limit: 1,
+      columns: {
+        id: true,
+      },
+      with: {
+        kaosKakiDetailVariasis: {
+          columns: {
+            id: true,
+          },
+          with: {
+            jenisUkuran: {
+              columns: {
+                id: true,
+                nama: true,
+              },
+            },
+            jenisWarna: {
+              columns: {
+                id: true,
+                nama: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Success Load Form Data Kaos Kaki",
+      data: {
+        result,
       },
     });
   } catch (error) {
@@ -282,54 +345,40 @@ export const newOrderData = async (
         });
 
       if (payload.orderDetails?.length) {
-        const validDetails = payload.orderDetails.filter(
-          (detail) =>
-            detail.variationDetails.kodeKaosKaki &&
-            detail.variationDetails.kodeUkuran &&
-            detail.variationDetails.kodeWarna
-        );
+        // const variasiArray = payload.orderDetails.map((m) => m.kodeKaosVariasi);
 
-        if (validDetails.length > 0) {
-          const insertedVariasiDetails = await tx
-            .insert(kaosKakiDetailVariasi)
-            .values(
-              validDetails.map((detail) => ({
-                kaosKakiId: detail.variationDetails.kodeKaosKaki!,
-                ukuranId: detail.variationDetails.kodeUkuran!,
-                warnaId: detail.variationDetails.kodeWarna!,
-              }))
-            )
-            .returning({
-              kodeDetailVariasi: kaosKakiDetailVariasi.id,
-            });
+        // const selectedVariasi = await db
+        //   .select({ kodeVariasiDetail: kaosKakiDetailVariasi.id })
+        //   .from(kaosKakiDetailVariasi)
+        //   .where(inArray(kaosKakiDetailVariasi.id, variasiArray));
 
-          await tx.insert(pesananDetail).values(
-            validDetails.map((detail, index) => ({
-              pesananId: newOrder.id,
-              kaosKakiVariasiId:
-                insertedVariasiDetails[index].kodeDetailVariasi,
-              jumlah: detail.amount,
-              hargaSatuan: "10.000",
-            }))
-          );
+        for (const variasi of payload.orderDetails) {
+          await tx.insert(pesananDetail).values({
+            kaosKakiVariasiId: variasi.kodeKaosVariasi,
+            hargaSatuan: variasi.price,
+            jumlah: variasi.amount,
+            pesananId: newOrder.id,
+            deletedAt: null,
+            isDeleted: false,
+          });
         }
-      }
 
-      res.status(201).json({
-        success: true,
-        message: "Kaos Kaki data created successfully",
-        data: {
-          nama: newOrder.nama,
-        },
-      });
+        res.status(201).json({
+          success: true,
+          message: "New Order data created successfully",
+          data: {
+            nama: newOrder.nama,
+          },
+        });
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const updatekaosKakiData = async (
-  req: Request<{}, {}, KaosKakiUpdateInput1>,
+export const updateOrderData = async (
+  req: Request<{}, {}, OrderUpdateInput>,
   res: Response,
   next: NextFunction
 ) => {
@@ -340,23 +389,44 @@ export const updatekaosKakiData = async (
       throw new AppError("ID and at least one field update are required", 400);
     }
 
-    const checkKaosKakiData = (await db.query.kaosKaki.findFirst({
-      where: eq(kaosKaki.id, payload.id),
+    const checkOrderData = await db.query.pesanan.findFirst({
+      where: eq(pesanan.id, payload.id),
+      columns: {
+        id: true,
+        catatan: true,
+        namaPemesan: true,
+        noTelp: true,
+        status: true,
+        createdAt: true,
+        isDeleted: true,
+        deletedAt: true,
+        updatedAt: true,
+      },
       with: {
-        kaosKakiDetailFotos: {
-          columns: { id: true, url: true },
-        },
-        kaosKakiDetailMesins: {
-          columns: { id: true },
+        pesananDetails: {
+          columns: {
+            isDeleted: true,
+            deletedAt: true,
+          },
           with: {
-            jenisMesin: { columns: { id: true } },
+            kaosKakiDetailVariasi: {
+              columns: {
+                id: true,
+              },
+              with: {
+                jenisUkuran: {
+                  columns: { id: true, nama: true },
+                },
+                jenisWarna: { columns: { id: true, nama: true } },
+              },
+            },
           },
         },
       },
-    })) as any;
+    });
 
-    if (!checkKaosKakiData) {
-      throw new AppError("Kaos kaki data not found", 404);
+    if (!checkOrderData) {
+      throw new AppError("Order data not found", 404);
     }
 
     await db.transaction(async (tx) => {
@@ -364,97 +434,65 @@ export const updatekaosKakiData = async (
         updatedAt: new Date().toISOString(),
       };
 
-      if (payload.nama && payload.nama !== checkKaosKakiData.nama) {
-        updateData.nama = payload.nama.trim();
+      if (
+        payload.namaPemesan &&
+        payload.namaPemesan !== checkOrderData.namaPemesan
+      ) {
+        updateData.namaPemesan = payload.namaPemesan.trim();
+      }
+
+      if (payload.catatan && payload.catatan !== checkOrderData.catatan) {
+        updateData.catatan = payload.catatan.trim();
       }
 
       if (
-        payload.keterangan &&
-        payload.keterangan !== checkKaosKakiData.keterangan
+        payload.noTelpPemesan &&
+        payload.noTelpPemesan !== checkOrderData.noTelp
       ) {
-        updateData.keterangan = payload.keterangan.trim();
+        updateData.noTelp = payload.noTelpPemesan;
       }
 
-      if (
-        payload.jenis_bahan &&
-        payload.jenis_bahan !== checkKaosKakiData.jenisBahanId
-      ) {
-        updateData.jenisBahanId = payload.jenis_bahan;
-      }
-
-      if (
-        payload.kode_kaos_kaki &&
-        payload.kode_kaos_kaki !== checkKaosKakiData.kodeKaosKaki
-      ) {
-        updateData.kodeKaosKaki = payload.kode_kaos_kaki.trim();
-      }
-
-      if (
-        payload.last_order &&
-        payload.last_order !== checkKaosKakiData.lastOrderDate
-      ) {
-        updateData.lastOrderDate = new Date(payload.last_order).toISOString();
-      }
-
-      if (payload.status && payload.status !== checkKaosKakiData.status) {
+      if (payload.status && payload.status !== checkOrderData.status) {
         updateData.status = payload.status;
       }
 
-      if (payload.mesin) {
-        for (const mesin of payload.mesin) {
-          const isExist = checkKaosKakiData.kaosKakiDetailMesins.some(
-            (m: any) => m.jenisMesin?.id === mesin.id_mesin
+      if (payload.orderDetails) {
+        for (const [index, detail] of payload.orderDetails.entries()) {
+          const isExist = checkOrderData.pesananDetails.some(
+            (m: any) => m?.id === detail.id
           );
 
-          if (!isExist && !mesin.isDeleted) {
-            await tx.insert(kaosKakiDetailMesin).values({
-              kaosKakiId: payload.id,
-              jenisMesinId: mesin.id_mesin,
+          if (!isExist && !detail.isDeleted) {
+            await tx.insert(pesananDetail).values({
+              pesananId: payload.id,
+              hargaSatuan: payload.orderDetails[index].price,
+              jumlah: payload.orderDetails[index].amount,
+              kaosKakiVariasiId: payload.orderDetails[index].id,
+              deletedAt: null,
+              isDeleted: false,
             });
           }
 
-          if (isExist && mesin.isDeleted) {
-            await tx
-              .update(kaosKakiDetailMesin)
-              .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-              .where(eq(kaosKakiDetailMesin.jenisMesinId, mesin.id_mesin));
-          }
-        }
-      }
-
-      if (payload.foto) {
-        for (const foto of payload.foto) {
-          const isExist = checkKaosKakiData.kaosKakiDetailFotos.some(
-            (f: any) => f.url === foto.url
-          );
-
-          if (!isExist && !foto.isDeleted) {
-            await tx.insert(kaosKakiDetailFoto).values({
-              kaosKakiId: payload.id,
-              url: foto.url,
-            });
-          }
-
-          if (isExist && foto.isDeleted) {
-            await tx
-              .update(kaosKakiDetailFoto)
-              .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-              .where(eq(kaosKakiDetailFoto.url, foto.url));
-          }
+          // if (isExist && mesin.isDeleted) {
+          //   await tx
+          //     .update(kaosKakiDetailMesin)
+          //     .set({ isDeleted: true, deletedAt: new Date().toISOString() })
+          //     .where(eq(kaosKakiDetailMesin.jenisMesinId, mesin.id_mesin));
+          // }
         }
       }
 
       if (Object.keys(updateData).length > 1) {
         await tx
-          .update(kaosKaki)
+          .update(pesanan)
           .set(updateData)
-          .where(eq(kaosKaki.id, payload.id));
+          .where(eq(pesanan.id, payload.id));
       }
     });
 
     res.status(200).json({
       success: true,
-      message: "Kaos kaki data updated successfully",
+      message: "Order data updated successfully",
     });
   } catch (error) {
     next(error);

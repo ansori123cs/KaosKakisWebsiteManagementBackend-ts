@@ -2,10 +2,10 @@ import { relations } from "drizzle-orm/relations";
 import {
   jenisBahan,
   kaosKaki,
+  kaosKakiDetailFoto,
   kaosKakiDetailVariasi,
   pesananDetail,
   pesanan,
-  kaosKakiDetailFoto,
   jenisMesin,
   kaosKakiDetailMesin,
   jenisUkuran,
@@ -27,6 +27,16 @@ export const kaosKakiRelations = relations(kaosKaki, ({ one, many }) => ({
 export const jenisBahanRelations = relations(jenisBahan, ({ many }) => ({
   kaosKakis: many(kaosKaki),
 }));
+
+export const kaosKakiDetailFotoRelations = relations(
+  kaosKakiDetailFoto,
+  ({ one }) => ({
+    kaosKaki: one(kaosKaki, {
+      fields: [kaosKakiDetailFoto.kaosKakiId],
+      references: [kaosKaki.id],
+    }),
+  })
+);
 
 export const pesananDetailRelations = relations(pesananDetail, ({ one }) => ({
   kaosKakiDetailVariasi: one(kaosKakiDetailVariasi, {
@@ -61,16 +71,6 @@ export const kaosKakiDetailVariasiRelations = relations(
 export const pesananRelations = relations(pesanan, ({ many }) => ({
   pesananDetails: many(pesananDetail),
 }));
-
-export const kaosKakiDetailFotoRelations = relations(
-  kaosKakiDetailFoto,
-  ({ one }) => ({
-    kaosKaki: one(kaosKaki, {
-      fields: [kaosKakiDetailFoto.kaosKakiId],
-      references: [kaosKaki.id],
-    }),
-  })
-);
 
 export const kaosKakiDetailMesinRelations = relations(
   kaosKakiDetailMesin,
