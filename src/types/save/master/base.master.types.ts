@@ -8,6 +8,8 @@ export interface BaseEntity {
 export interface AuditableEntity extends BaseEntity {
   createdBy?: number;
   updatedBy?: number;
+  isDeleted?: boolean;
+  deletedAt?: Date;
 }
 
 // Status enums umum

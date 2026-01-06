@@ -11,24 +11,28 @@ export interface KaosKaki extends AuditableEntity {
   keterangan: string;
   last_order: string;
   status: number;
-  userId?: number;
 }
 
-export interface KaosKakiCreateInput {
+export interface KaosKakiCreateInput extends AuditableEntity {
   nama: string;
   kode_kaos_kaki: string;
   jenis_bahan: number;
   mesin: number[];
+  kaosKakiVariasi: variasiDetail[];
   foto: FotoKaosKaki[];
   keterangan: string;
   last_order: string;
   status: Status;
-  userId?: number;
 }
 
-export interface FotoKaosKaki {
+export interface FotoKaosKaki extends AuditableEntity {
   url: string;
   is_primary: boolean;
+}
+
+export interface variasiDetail extends AuditableEntity {
+  kodeWarna: number;
+  kodeUkuran: number;
 }
 export interface KaosKakiUpdateInput1 extends Partial<KaosKakiUpdateInput> {
   id: number;
@@ -40,7 +44,6 @@ export interface BulkKaosKakiUpdate {
 }
 
 export interface KaosKakiUpdateInput {
-  id: number;
   nama?: string;
   keterangan?: string;
   jenis_bahan?: number;
@@ -54,6 +57,13 @@ export interface KaosKakiUpdateInput {
   foto?: Array<{
     url: string;
     isPrimary?: boolean;
+    isDeleted?: boolean;
+  }>;
+  variasiDetail?: Array<{
+    id: number;
+    kodeVariasi: string;
+    kodeWarna: number;
+    kodeUkuran: number;
     isDeleted?: boolean;
   }>;
   userId?: number;

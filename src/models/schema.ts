@@ -192,30 +192,6 @@ export const auditLog = pgTable("audit_log", {
 	check("audit_log_action_check", sql`action = ANY (ARRAY['CREATE'::text, 'UPDATE'::text, 'DELETE'::text, 'SOFT_DELETE'::text, 'RESTORE'::text])`),
 ]);
 
-export const kaosKakiDetailVariasi = pgTable("kaos_kaki_detail_variasi", {
-	id: serial().primaryKey().notNull(),
-	kaosKakiId: integer("kaos_kaki_id").notNull(),
-	ukuranId: integer("ukuran_id").notNull(),
-	warnaId: integer("warna_id").notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.kaosKakiId],
-			foreignColumns: [kaosKaki.id],
-			name: "kaos_kaki_variasi_kaos_kaki_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.ukuranId],
-			foreignColumns: [jenisUkuran.id],
-			name: "kaos_kaki_variasi_ukuran_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.warnaId],
-			foreignColumns: [jenisWarna.id],
-			name: "kaos_kaki_variasi_warna_id_fkey"
-		}),
-	unique("uk_variasi").on(table.kaosKakiId, table.ukuranId, table.warnaId),
-]);
-
 export const kaosKakiStok = pgTable("kaos_kaki_stok", {
 	id: integer().primaryKey().generatedByDefaultAsIdentity({ name: "stok_kaos_kaki_id_seq", startWith: 1, increment: 1, minValue: 1, maxValue: 2147483647, cache: 1 }),
 	idKaos: integer("id_kaos"),
@@ -242,4 +218,30 @@ export const kaosKakiStok = pgTable("kaos_kaki_stok", {
 			foreignColumns: [jenisWarna.id],
 			name: "stok_kaos_kaki_id_warna_fkey"
 		}),
+]);
+
+export const kaosKakiDetailVariasi = pgTable("kaos_kaki_detail_variasi", {
+	id: serial().primaryKey().notNull(),
+	kaosKakiId: integer("kaos_kaki_id").notNull(),
+	ukuranId: integer("ukuran_id").notNull(),
+	warnaId: integer("warna_id").notNull(),
+	isDeleted: boolean().default(false),
+	deletedAt: timestamp({ withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.kaosKakiId],
+			foreignColumns: [kaosKaki.id],
+			name: "kaos_kaki_variasi_kaos_kaki_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.ukuranId],
+			foreignColumns: [jenisUkuran.id],
+			name: "kaos_kaki_variasi_ukuran_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.warnaId],
+			foreignColumns: [jenisWarna.id],
+			name: "kaos_kaki_variasi_warna_id_fkey"
+		}),
+	unique("uk_variasi").on(table.kaosKakiId, table.ukuranId, table.warnaId),
 ]);

@@ -8,9 +8,9 @@ import {
   pesanan,
   jenisMesin,
   kaosKakiDetailMesin,
+  kaosKakiStok,
   jenisUkuran,
   jenisWarna,
-  kaosKakiStok,
 } from "./schema.ts";
 
 export const kaosKakiRelations = relations(kaosKaki, ({ one, many }) => ({
@@ -20,8 +20,8 @@ export const kaosKakiRelations = relations(kaosKaki, ({ one, many }) => ({
   }),
   kaosKakiDetailFotos: many(kaosKakiDetailFoto),
   kaosKakiDetailMesins: many(kaosKakiDetailMesin),
-  kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
   kaosKakiStoks: many(kaosKakiStok),
+  kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
 }));
 
 export const jenisBahanRelations = relations(jenisBahan, ({ many }) => ({
@@ -90,16 +90,6 @@ export const jenisMesinRelations = relations(jenisMesin, ({ many }) => ({
   kaosKakiDetailMesins: many(kaosKakiDetailMesin),
 }));
 
-export const jenisUkuranRelations = relations(jenisUkuran, ({ many }) => ({
-  kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
-  kaosKakiStoks: many(kaosKakiStok),
-}));
-
-export const jenisWarnaRelations = relations(jenisWarna, ({ many }) => ({
-  kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
-  kaosKakiStoks: many(kaosKakiStok),
-}));
-
 export const kaosKakiStokRelations = relations(kaosKakiStok, ({ one }) => ({
   kaosKaki: one(kaosKaki, {
     fields: [kaosKakiStok.idKaos],
@@ -113,4 +103,14 @@ export const kaosKakiStokRelations = relations(kaosKakiStok, ({ one }) => ({
     fields: [kaosKakiStok.idWarna],
     references: [jenisWarna.id],
   }),
+}));
+
+export const jenisUkuranRelations = relations(jenisUkuran, ({ many }) => ({
+  kaosKakiStoks: many(kaosKakiStok),
+  kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
+}));
+
+export const jenisWarnaRelations = relations(jenisWarna, ({ many }) => ({
+  kaosKakiStoks: many(kaosKakiStok),
+  kaosKakiDetailVariasis: many(kaosKakiDetailVariasi),
 }));
