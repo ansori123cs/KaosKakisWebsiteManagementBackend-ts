@@ -241,16 +241,33 @@ export const newStockData = async (
     }
 
     await db.transaction(async (tx) => {
-      const [newStock] = await tx.insert(kaosKakiStok).values({
-        idKaos: payload.kodeVariasi,
-        idUkuran: payload.kodeVariasi,
-        idWarna: payload.kodeVariasi,
-        stok: payload.stockAmmount,
-      });
+      const [newStock] = await tx
+        .insert(kaosKakiStok)
+        .values({
+          idKaos: payload.variasi.kodeKaos,
+          idUkuran: payload.variasi.kodeUkuran,
+          idWarna: payload.variasi.kodeWarna,
+          stok: payload.stockAmmount,
+        })
+        .returning({
+          idKaos: kaosKakiStok.idKaos,
+        });
 
-      res.status(201).json({
+      if (newStock.idKaos) {
+        const result = await tx
+          .select({ nama: kaosKaki.nama })
+          .from(kaosKaki)
+          .where(eq(kaosKaki.id, newStock.idKaos));
+
+        res.status(201).json({
+          success: true,
+          message: "New Stock data created successfully",
+          data: { result },
+        });
+      }
+      res.status(400).json({
         success: true,
-        message: "New Stock data created successfully",
+        message: "Failed During Save",
         data: {},
       });
     });

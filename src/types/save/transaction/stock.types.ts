@@ -6,13 +6,18 @@ export interface Stock extends AuditableEntity {
 }
 
 export interface StockCreateInput extends AuditableEntity {
-  kodeVariasi: number;
+  variasi: Variasi;
   stockAmmount: number;
   isDeleted: boolean;
   deletedAt: Date;
   userId?: number;
 }
 
+export interface Variasi {
+  kodeKaos: number;
+  kodeUkuran: number;
+  kodeWarna: number;
+}
 export interface StockUpdateInput extends Partial<StockCreateInput> {
   id: number;
 }
@@ -27,7 +32,7 @@ export interface OrderDeleteInput {
   userId?: number;
 }
 
-export interface OrderQueryParams {
+export interface StockQueryParams {
   page?: number;
   limit?: number;
   search?: string;
