@@ -3,6 +3,7 @@ import {
   kaosKakiDetailFoto,
   kaosKakiDetailMesin,
   kaosKakiDetailVariasi,
+  kaosKakiStok,
   pesanan,
   pesananDetail,
 } from "../../models/index.ts";
@@ -233,7 +234,7 @@ export const FormDataOrderKaosKaki = async (
 
     res.status(200).json({
       success: true,
-      message: "Success Load Form Data Kaos Kaki",
+      message: "Success Load Form Data Order",
       data: {
         result,
         pagination: {
@@ -346,13 +347,6 @@ export const newOrderData = async (
         });
 
       if (payload.orderDetails?.length) {
-        // const variasiArray = payload.orderDetails.map((m) => m.kodeKaosVariasi);
-
-        // const selectedVariasi = await db
-        //   .select({ kodeVariasiDetail: kaosKakiDetailVariasi.id })
-        //   .from(kaosKakiDetailVariasi)
-        //   .where(inArray(kaosKakiDetailVariasi.id, variasiArray));
-
         for (const variasi of payload.orderDetails) {
           await tx.insert(pesananDetail).values({
             kaosKakiVariasiId: variasi.kodeKaosVariasi,
@@ -531,7 +525,7 @@ export const deleteOrderData = async (
 
       res.status(201).json({
         success: true,
-        message: "Kaos Kaki data deleted successfully",
+        message: "Order data deleted successfully",
         data: {
           nama: deletedOrderData.nama,
         },
