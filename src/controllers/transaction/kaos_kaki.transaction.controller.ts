@@ -10,7 +10,7 @@ import {
 } from "../../models/index.ts";
 import { db } from "../../config/database.ts";
 import type { Request, Response, NextFunction } from "express";
-import { or, eq, count, and, isNotNull } from "drizzle-orm";
+import { or, eq, count, and, isNotNull, isNull } from "drizzle-orm";
 import { AppError } from "../../types/middleware/error.types.ts";
 import type {
   KaosKakiCreateInput,
@@ -30,32 +30,20 @@ export const getKaosKakiData = async (
 
     const result = await db.query.kaosKaki.findMany({
       columns: {
-        id: true,
         nama: true,
+        lastOrderDate: true,
+        status: true,
       },
-
       with: {
         jenisBahan: {
           columns: {
-            id: true,
             nama: true,
           },
         },
-        kaosKakiDetailFotos: {
-          columns: {
-            id: true,
-            isPrimary: true,
-            url: true,
-          },
-        },
         kaosKakiDetailMesins: {
-          columns: {
-            id: true,
-          },
           with: {
             jenisMesin: {
               columns: {
-                id: true,
                 nama: true,
               },
             },
@@ -63,14 +51,17 @@ export const getKaosKakiData = async (
         },
       },
 
-      where: (kaosKaki, { eq }) => eq(kaosKaki.isDeleted, false),
+      where: (kaosKaki, { eq, and, isNull }) =>
+        and(eq(kaosKaki.isDeleted, false), isNull(kaosKaki.deletedAt)),
+
       limit: limit,
+      offset: offset,
     });
 
     const [{ total }] = await db
       .select({ total: count() })
       .from(kaosKaki)
-      .where(eq(kaosKaki.isDeleted, false));
+      .where(and(eq(kaosKaki.isDeleted, false), isNull(kaosKaki.deletedAt)));
 
     const totalPages = Math.ceil(total / limit);
 
@@ -121,7 +112,12 @@ export const getKaosKakiDetails = async (
     }
 
     const result = await db.query.kaosKaki.findFirst({
-      where: eq(kaosKaki.id, id),
+      where: (kaosKaki, { eq, and, isNull }) =>
+        and(
+          eq(kaosKaki.id, id),
+          eq(kaosKaki.isDeleted, false),
+          isNull(kaosKaki.deletedAt)
+        ),
       with: {
         jenisBahan: {
           columns: {
@@ -150,6 +146,9 @@ export const getKaosKakiDetails = async (
           },
         },
         kaosKakiDetailVariasis: {
+          columns: {
+            id: true,
+          },
           with: {
             jenisUkuran: {
               columns: {
