@@ -1,7 +1,5 @@
 import {
   kaosKaki,
-  pesanan,
-  pesananDetail,
   kaosKakiStok,
   kaosKakiDetailVariasi,
 } from "../../models/index.ts";
@@ -9,9 +7,11 @@ import { db } from "../../config/database.ts";
 import type { Request, Response, NextFunction } from "express";
 import { or, eq, count, and, like, arrayContains, inArray } from "drizzle-orm";
 import { AppError } from "../../types/middleware/error.types.ts";
-import {
+import type {
   StockCreateInput,
+  StockDeleteInput,
   StockQueryParams,
+  StockUpdateInput,
 } from "../../types/save/transaction/stock.types.ts";
 
 export const getStockData = async (
@@ -276,118 +276,76 @@ export const newStockData = async (
   }
 };
 
-export const updateOrderData = async (
-  req: Request<{}, {}, OrderUpdateInput>,
+export const updateStockData = async (
+  req: Request<{}, {}, StockUpdateInput>,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const payload = req.body;
 
-    if (!payload?.id) {
-      throw new AppError("ID and at least one field update are required", 400);
-    }
-
-    const checkOrderData = await db.query.pesanan.findFirst({
-      where: eq(pesanan.id, payload.id),
-      columns: {
-        id: true,
-        catatan: true,
-        namaPemesan: true,
-        noTelp: true,
-        status: true,
-        createdAt: true,
-        isDeleted: true,
-        deletedAt: true,
-        updatedAt: true,
-      },
-      with: {
-        pesananDetails: {
-          columns: {
-            isDeleted: true,
-            deletedAt: true,
-            kaosKakiVariasiId: true,
-          },
+    if (payload.variasi) {
+      const checkStockData = await db.query.kaosKakiStok.findFirst({
+        where: and(
+          eq(kaosKakiStok.idUkuran, payload.variasi?.kodeUkuran),
+          eq(kaosKakiStok.idKaos, payload.variasi?.kodeKaos),
+          eq(kaosKakiStok.idWarna, payload.variasi?.kodeWarna)
+        ),
+        columns: {
+          id: true,
+          stok: true,
+          createdAt: true,
+          isDeleted: true,
+          deletedAt: true,
+          updatedAt: true,
         },
-      },
-    });
+      });
 
-    if (!checkOrderData) {
-      throw new AppError("Order data not found", 404);
-    }
+      if (checkStockData) {
+        await db.transaction(async (tx) => {
+          const updateData: Record<string, any> = {
+            updatedAt: new Date().toISOString(),
+          };
 
-    await db.transaction(async (tx) => {
-      const updateData: Record<string, any> = {
-        updatedAt: new Date().toISOString(),
-      };
+          if (payload.isDeleted) {
+            updateData.isDeleted = true;
+          }
 
-      if (
-        payload.namaPemesan &&
-        payload.namaPemesan !== checkOrderData.namaPemesan
-      ) {
-        updateData.namaPemesan = payload.namaPemesan.trim();
-      }
+          if (payload.stockAmmount && checkStockData.stok) {
+            updateData.stok = payload.stockAmmount;
+          }
 
-      if (payload.catatan && payload.catatan !== checkOrderData.catatan) {
-        updateData.catatan = payload.catatan.trim();
-      }
+          if (payload.variasi) {
+            const [updatedStockData] = await db
+              .update(kaosKakiStok)
+              .set(updateData)
+              .where(
+                and(
+                  eq(kaosKakiStok.idUkuran, payload.variasi?.kodeUkuran),
+                  eq(kaosKakiStok.idKaos, payload.variasi?.kodeKaos),
+                  eq(kaosKakiStok.idWarna, payload.variasi?.kodeWarna)
+                )
+              )
+              .returning({ nama: kaosKakiStok.stok });
 
-      if (
-        payload.noTelpPemesan &&
-        payload.noTelpPemesan !== checkOrderData.noTelp
-      ) {
-        updateData.noTelp = payload.noTelpPemesan;
-      }
-
-      if (payload.status && payload.status !== checkOrderData.status) {
-        updateData.status = payload.status;
-      }
-
-      if (payload.orderDetails) {
-        for (const [index, detail] of payload.orderDetails.entries()) {
-          const isExist = checkOrderData.pesananDetails.some(
-            (m: any) => m?.kaosKakiVariasiId === detail.kodeKaosVariasi
-          );
-
-          if (!isExist && !detail.isDeleted) {
-            await tx.insert(pesananDetail).values({
-              pesananId: payload.id,
-              hargaSatuan: payload.orderDetails[index].price,
-              jumlah: payload.orderDetails[index].amount,
-              kaosKakiVariasiId: payload.orderDetails[index].kodeKaosVariasi,
-              deletedAt: null,
-              isDeleted: false,
+            res.status(200).json({
+              success: true,
+              message: `Order data updated successfully to ${updatedStockData.nama}`,
             });
           }
-
-          if (isExist && detail.isDeleted) {
-            await tx
-              .update(pesananDetail)
-              .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-              .where(eq(pesananDetail.id, detail.id));
-          }
-        }
+        });
       }
+      throw new AppError("Stock data not found", 404);
+    }
 
-      if (Object.keys(updateData).length > 1) {
-        await tx
-          .update(pesanan)
-          .set(updateData)
-          .where(eq(pesanan.id, payload.id));
-      }
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Order data updated successfully",
-    });
+    throw new AppError("ID and at least one field update are required", 400);
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteOrderData = async (
-  req: Request<{}, {}, OrderDeleteInput>,
+export const deleteStockData = async (
+  req: Request<{}, {}, StockDeleteInput>,
   res: Response,
   next: NextFunction
 ) => {
@@ -400,39 +358,26 @@ export const deleteOrderData = async (
 
     await db.transaction(async (tx) => {
       const checkDuplicate = await tx
-        .select({ id: pesanan.id })
-        .from(pesanan)
-        .where(eq(pesanan.id, payload.id))
+        .select({ id: kaosKakiStok.id })
+        .from(kaosKakiStok)
+        .where(eq(kaosKakiStok.id, payload.id))
         .limit(1);
 
       if (checkDuplicate.length > 0) {
         throw new AppError("Data Doesnt exist", 404);
       }
 
-      const [deletedOrderData] = await tx
-        .update(pesanan)
+      await tx
+        .update(kaosKakiStok)
         .set({
-          status: 0,
           isDeleted: true,
           deletedAt: new Date().toISOString(),
         })
-        .where(eq(pesanan.id, payload.id))
-        .returning({
-          id: pesanan.id,
-          nama: pesanan.namaPemesan,
-        });
-
-      await tx
-        .update(pesananDetail)
-        .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-        .where(eq(pesanan.id, payload.id));
+        .where(eq(kaosKakiStok.id, payload.id));
 
       res.status(201).json({
         success: true,
-        message: "Kaos Kaki data deleted successfully",
-        data: {
-          nama: deletedOrderData.nama,
-        },
+        message: "Stock data deleted successfully",
       });
     });
   } catch (error) {

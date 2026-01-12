@@ -1,6 +1,6 @@
 import { db } from "../../config/database.ts";
 import { jenisMesin } from "../../models/schema.ts";
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import type {
   MachineCreateInput,
@@ -19,9 +19,12 @@ export const getMachineData = async (
     const offset = (page - 1) * limit;
 
     const rows = await db
-      .select()
+      .select({
+        nama: jenisMesin.nama,
+        kode: jenisMesin.kodeMesin,
+      })
       .from(jenisMesin)
-      .where(eq(jenisMesin.isDeleted, false))
+      .where(and(eq(jenisMesin.isDeleted, false), isNull(jenisMesin.deletedAt)))
       .orderBy(asc(jenisMesin.nama))
       .limit(limit)
       .offset(offset);
@@ -77,7 +80,12 @@ export const getMachineDetails = async (
     }
 
     const [detailMasterData] = await db
-      .select({ nama: jenisMesin.nama, kode_mesin: jenisMesin.kodeMesin })
+      .select({
+        nama: jenisMesin.nama,
+        kode: jenisMesin.kodeMesin,
+        createdAt: jenisMesin.createdAt,
+        updatedAt: jenisMesin.updatedAt,
+      })
       .from(jenisMesin)
       .where(eq(jenisMesin.id, id))
       .limit(1);
@@ -118,6 +126,8 @@ export const newMachineData = async (
         status: payload.status ?? 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isDeleted: false,
+        deletedAt: null,
       })
       .returning({
         nama: jenisMesin.nama,
@@ -171,6 +181,10 @@ export const updateMachineData = async (
     if (payload.status !== undefined) {
       updateData.status = payload.status;
     }
+    if (payload.isDeleted) {
+      updateData.isDeleted = payload.isDeleted;
+      updateData.deletedAt = new Date().toISOString();
+    }
 
     const [updatedMasterData] = await db
       .update(jenisMesin)
@@ -208,9 +222,11 @@ export const deleteMachineData = async (
     const payload = req.body;
 
     if (!payload || !payload.id) {
-      throw new AppError("Machine ID is required", 400);
+      throw new AppError("Machine ID is Not Valid", 400);
     }
-
+    if (isNaN(payload.id)) {
+      throw new AppError("Machine ID is Not Valid", 400);
+    }
     const [deletedMasterData] = await db
       .update(jenisMesin)
       .set({

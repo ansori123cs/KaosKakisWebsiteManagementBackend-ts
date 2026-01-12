@@ -18,6 +18,8 @@ export interface MaterialCreateInput {
 
 export interface MaterialUpdateInput extends Partial<MaterialCreateInput> {
   id: number;
+  isDeleted: boolean;
+  deletedAt: Date;
 }
 
 export interface BulkMaterialUpdate {

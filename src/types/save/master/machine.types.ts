@@ -18,6 +18,8 @@ export interface MachineCreateInput {
 
 export interface MachineUpdateInput extends Partial<MachineCreateInput> {
   id: number;
+  isDeleted: boolean;
+  deletedAt: Date;
 }
 
 export interface BulkMachineUpdate {

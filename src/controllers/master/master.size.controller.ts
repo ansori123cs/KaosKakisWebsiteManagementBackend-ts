@@ -1,6 +1,6 @@
 import { db } from "../../config/database.ts";
 import { jenisUkuran } from "../../models/schema.ts";
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import type {
   SizeCreateInput,
@@ -19,9 +19,14 @@ export const getSizeData = async (
     const offset = (page - 1) * limit;
 
     const rows = await db
-      .select()
+      .select({
+        nama: jenisUkuran.nama,
+        kode: jenisUkuran.kodeUkuran,
+      })
       .from(jenisUkuran)
-      .where(eq(jenisUkuran.isDeleted, false))
+      .where(
+        and(eq(jenisUkuran.isDeleted, false), isNull(jenisUkuran.deletedAt))
+      )
       .orderBy(asc(jenisUkuran.nama))
       .limit(limit)
       .offset(offset);
@@ -77,11 +82,15 @@ export const getSizeDetails = async (
     }
 
     const [detailMasterData] = await db
-      .select({ nama: jenisUkuran.nama, kode_ukuran: jenisUkuran.kodeUkuran })
+      .select({
+        nama: jenisUkuran.nama,
+        kode: jenisUkuran.kodeUkuran,
+        createdAt: jenisUkuran.createdAt,
+        updatedAt: jenisUkuran.updatedAt,
+      })
       .from(jenisUkuran)
       .where(eq(jenisUkuran.id, id))
       .limit(1);
-
     if (!detailMasterData) {
       throw new AppError("Size not found", 404);
     }
@@ -118,6 +127,8 @@ export const newSizeData = async (
         status: payload.status ?? 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isDeleted: false,
+        deletedAt: null,
       })
       .returning({
         nama: jenisUkuran.nama,
@@ -171,7 +182,10 @@ export const updateSizeData = async (
     if (payload.status !== undefined) {
       updateData.status = payload.status;
     }
-
+    if (payload.isDeleted) {
+      updateData.isDeleted = payload.isDeleted;
+      updateData.deletedAt = new Date().toISOString();
+    }
     const [updatedMasterData] = await db
       .update(jenisUkuran)
       .set(updateData)
@@ -208,7 +222,10 @@ export const deleteSizeData = async (
     const payload = req.body;
 
     if (!payload || !payload.id) {
-      throw new AppError("Size ID is required", 400);
+      throw new AppError("Size ID is Not Valid", 400);
+    }
+    if (isNaN(payload.id)) {
+      throw new AppError("Size ID is Not Valid", 400);
     }
 
     const [deletedMasterData] = await db

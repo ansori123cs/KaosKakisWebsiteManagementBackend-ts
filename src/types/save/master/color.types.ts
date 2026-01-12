@@ -18,6 +18,8 @@ export interface ColorCreateInput {
 
 export interface ColorUpdateInput extends Partial<ColorCreateInput> {
   id: number;
+  isDeleted: boolean;
+  deletedAt: Date;
 }
 
 export interface BulkColorUpdate {

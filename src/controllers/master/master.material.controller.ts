@@ -1,6 +1,6 @@
 import { db } from "../../config/database.ts";
 import { jenisBahan } from "../../models/schema.ts";
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import type {
   MaterialCreateInput,
@@ -19,9 +19,12 @@ export const getMaterialData = async (
     const offset = (page - 1) * limit;
 
     const rows = await db
-      .select()
+      .select({
+        nama: jenisBahan.nama,
+        kode: jenisBahan.kodeBahan,
+      })
       .from(jenisBahan)
-      .where(eq(jenisBahan.isDeleted, false))
+      .where(and(eq(jenisBahan.isDeleted, false), isNull(jenisBahan.deletedAt)))
       .orderBy(asc(jenisBahan.nama))
       .limit(limit)
       .offset(offset);
@@ -77,7 +80,12 @@ export const getMaterialDetails = async (
     }
 
     const [detailMasterData] = await db
-      .select({ nama: jenisBahan.nama, kode_bahan: jenisBahan.kodeBahan })
+      .select({
+        nama: jenisBahan.nama,
+        kode: jenisBahan.kodeBahan,
+        createdAt: jenisBahan.createdAt,
+        updatedAt: jenisBahan.updatedAt,
+      })
       .from(jenisBahan)
       .where(eq(jenisBahan.id, id))
       .limit(1);
@@ -118,6 +126,8 @@ export const newMaterialData = async (
         status: payload.status ?? 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isDeleted: false,
+        deletedAt: null,
       })
       .returning({
         nama: jenisBahan.nama,
@@ -172,6 +182,11 @@ export const updateMaterialData = async (
       updateData.status = payload.status;
     }
 
+    if (payload.isDeleted) {
+      updateData.isDeleted = payload.isDeleted;
+      updateData.deletedAt = new Date().toISOString();
+    }
+
     const [updatedMasterData] = await db
       .update(jenisBahan)
       .set(updateData)
@@ -208,7 +223,11 @@ export const deleteMaterialData = async (
     const payload = req.body;
 
     if (!payload || !payload.id) {
-      throw new AppError("material ID is required", 400);
+      throw new AppError("Material ID is Not Valid", 400);
+    }
+
+    if (isNaN(payload.id)) {
+      throw new AppError("Material ID is Not Valid", 400);
     }
 
     const [deletedMasterData] = await db

@@ -1,0 +1,20 @@
+import {
+  deleteStockData,
+  FormDataStokKaosKaki,
+  getStockData,
+  getStockDetails,
+  newStockData,
+  updateStockData,
+} from "../../controllers/transaction/stock.transaction.controller.ts";
+import { Router } from "express";
+
+const stockRouter = Router();
+
+stockRouter.get("/", getStockData);
+stockRouter.get("/form/:id", FormDataStokKaosKaki);
+stockRouter.get("/:id", getStockDetails);
+stockRouter.post("/create", newStockData);
+stockRouter.put("/update/:id", updateStockData);
+stockRouter.delete("/delete/:id", deleteStockData);
+
+export default stockRouter;

@@ -1,4 +1,4 @@
-import { AuditableEntity, Status } from "../master/base.master.types.ts";
+import type { AuditableEntity, Status } from "../master/base.master.types.ts";
 
 export interface Stock extends AuditableEntity {
   kodeVariasi: number;
@@ -27,7 +27,7 @@ export interface BulkUpdateStock {
   data: Partial<StockUpdateInput>;
 }
 
-export interface OrderDeleteInput {
+export interface StockDeleteInput {
   id: number;
   userId?: number;
 }

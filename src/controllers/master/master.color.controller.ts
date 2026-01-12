@@ -1,6 +1,6 @@
 import { db } from "../../config/database.ts";
 import { jenisWarna } from "../../models/schema.ts";
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../../types/middleware/error.types.ts";
 import type {
@@ -19,9 +19,12 @@ export const getColorData = async (
     const offset = (page - 1) * limit;
 
     const rows = await db
-      .select()
+      .select({
+        nama: jenisWarna.nama,
+        kode: jenisWarna.kodeWarna,
+      })
       .from(jenisWarna)
-      .where(eq(jenisWarna.isDeleted, false))
+      .where(and(eq(jenisWarna.isDeleted, false), isNull(jenisWarna.deletedAt)))
       .orderBy(asc(jenisWarna.nama))
       .limit(limit)
       .offset(offset);
@@ -77,7 +80,12 @@ export const getColorDetails = async (
     }
 
     const [detailMasterData] = await db
-      .select({ nama: jenisWarna.nama, kode_warna: jenisWarna.kodeWarna })
+      .select({
+        nama: jenisWarna.nama,
+        kode: jenisWarna.kodeWarna,
+        createdAt: jenisWarna.createdAt,
+        updatedAt: jenisWarna.updatedAt,
+      })
       .from(jenisWarna)
       .where(eq(jenisWarna.id, id))
       .limit(1);
@@ -118,6 +126,8 @@ export const newColorData = async (
         status: payload.status ?? 1,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isDeleted: false,
+        deletedAt: null,
       })
       .returning({
         nama: jenisWarna.nama,
@@ -171,7 +181,10 @@ export const updateColorData = async (
     if (payload.status !== undefined) {
       updateData.status = payload.status;
     }
-
+    if (payload.isDeleted) {
+      updateData.isDeleted = payload.isDeleted;
+      updateData.deletedAt = new Date().toISOString();
+    }
     const [updatedMasterData] = await db
       .update(jenisWarna)
       .set(updateData)
@@ -208,9 +221,11 @@ export const deleteColorData = async (
     const payload = req.body;
 
     if (!payload || !payload.id) {
-      throw new AppError("Color ID is required", 400);
+      throw new AppError("Color ID is Not Valid", 400);
     }
-
+    if (isNaN(payload.id)) {
+      throw new AppError("Color ID is Not Valid", 400);
+    }
     const [deletedMasterData] = await db
       .update(jenisWarna)
       .set({

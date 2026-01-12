@@ -18,6 +18,8 @@ export interface SizeCreateInput {
 
 export interface SizeUpdateInput extends Partial<SizeCreateInput> {
   id: number;
+  isDeleted: boolean;
+  deletedAt: Date;
 }
 
 export interface BulkSizeUpdate {
