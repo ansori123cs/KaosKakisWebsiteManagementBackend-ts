@@ -11,7 +11,7 @@ import { Router } from "express";
 const kaosKakiRouter = Router();
 
 kaosKakiRouter.get("/", getKaosKakiData);
-kaosKakiRouter.get("/form/:id", FormDataKaosKaki);
+kaosKakiRouter.get("/form/:select", FormDataKaosKaki);
 kaosKakiRouter.get("/:id", getKaosKakiDetails);
 kaosKakiRouter.post("/create", newkaosKakiData);
 kaosKakiRouter.put("/update/:id", updatekaosKakiData);

@@ -41,6 +41,12 @@ export const getKaosKakiData = async (
           },
         },
         kaosKakiDetailMesins: {
+          columns: {},
+          where: (kaosKakiDetailMesin, { eq, and, isNull }) =>
+            and(
+              eq(kaosKakiDetailMesin.isDeleted, false),
+              isNull(kaosKakiDetailMesin.deletedAt)
+            ),
           with: {
             jenisMesin: {
               columns: {
@@ -51,12 +57,17 @@ export const getKaosKakiData = async (
         },
       },
 
-      where: (kaosKaki, { eq, and, isNull }) =>
-        and(eq(kaosKaki.isDeleted, false), isNull(kaosKaki.deletedAt)),
-
-      limit: limit,
-      offset: offset,
+      limit,
+      offset,
     });
+
+    const mappedResult = result.map((item) => ({
+      nama: item.nama,
+      lastOrderDate: item.lastOrderDate,
+      status: item.status,
+      jenisBahan: item.jenisBahan?.nama ?? null,
+      jenisMesin: item.kaosKakiDetailMesins.map((m) => m.jenisMesin?.nama),
+    }));
 
     const [{ total }] = await db
       .select({ total: count() })
@@ -84,7 +95,7 @@ export const getKaosKakiData = async (
       success: true,
       message: "Kaos Kaki Data Retrieved successfully",
       data: {
-        result,
+        mappedResult,
         pagination: {
           currentPage: page,
           itemsPerPage: offset,
@@ -127,28 +138,22 @@ export const getKaosKakiDetails = async (
         },
         kaosKakiDetailFotos: {
           columns: {
-            id: true,
             isPrimary: true,
             url: true,
           },
         },
         kaosKakiDetailMesins: {
-          columns: {
-            id: true,
-          },
+          columns: {},
           with: {
             jenisMesin: {
               columns: {
-                id: true,
                 nama: true,
               },
             },
           },
         },
         kaosKakiDetailVariasis: {
-          columns: {
-            id: true,
-          },
+          columns: {},
           with: {
             jenisUkuran: {
               columns: {
@@ -170,11 +175,20 @@ export const getKaosKakiDetails = async (
       throw new AppError("Invalid Kaos Kaki", 404);
     }
 
+    const mappedResult: KaosKakiCreateInput = {
+      nama: result.nama,
+      jenis_bahan:result.jenisBahan?.nama
+      foto:
+        result.kaosKakiDetailFotos?.map((f) => ({
+          url: f.url,
+          isPrimary: f.isPrimary,
+        })) ?? [],
+    };
     res.status(200).json({
       success: true,
       message: "Success Rtrieved Kaos Kaki Data",
       data: {
-        result,
+        mappedResult,
       },
     });
   } catch (error) {
@@ -188,55 +202,38 @@ export const FormDataKaosKaki = async (
   next: NextFunction
 ) => {
   try {
-    console.log("here");
-    const jenisMesinList = await db
-      .select({
-        kode: jenisMesin.id,
-        nama: jenisMesin.nama,
-      })
-      .from(jenisMesin)
-      .where(
-        and(eq(jenisMesin.isDeleted, false), isNotNull(jenisMesin.deletedAt))
-      );
+    const { select } = req.params;
 
-    const jenisBahanList = await db
-      .select({
-        kode: jenisBahan.id,
-        nama: jenisBahan.nama,
-      })
-      .from(jenisBahan)
-      .where(
-        and(eq(jenisBahan.isDeleted, false), isNotNull(jenisMesin.deletedAt))
-      );
+    if (!select) {
+      throw new AppError("Invalid Select Option", 400);
+    }
 
-    const jenisWarnaList = await db
-      .select({
-        kode: jenisWarna.id,
-        nama: jenisWarna.nama,
-      })
-      .from(jenisWarna)
-      .where(
-        and(eq(jenisWarna.isDeleted, false), isNotNull(jenisMesin.deletedAt))
-      );
+    const configMap = {
+      "select-mesin": jenisMesin,
+      "select-bahan": jenisBahan,
+      "select-warna": jenisWarna,
+      "select-ukuran": jenisUkuran,
+    } as const;
 
-    const jenisUkuranList = await db
-      .select({
-        kode: jenisUkuran.id,
-        nama: jenisUkuran.nama,
-      })
-      .from(jenisUkuran)
-      .where(
-        and(eq(jenisUkuran.isDeleted, false), isNotNull(jenisMesin.deletedAt))
-      );
+    const table = configMap[select as keyof typeof configMap];
 
-    res.status(200).json({
+    if (!table) {
+      throw new AppError("Invalid Select Option", 400);
+    }
+
+    const result = await db
+      .select({
+        kode: table.id,
+        nama: table.nama,
+      })
+      .from(table)
+      .where(and(eq(table.isDeleted, false), isNull(table.deletedAt)));
+
+    return res.status(200).json({
       success: true,
-      message: "Success Load Form Data",
+      message: "Success load form data",
       data: {
-        jenisMesinList,
-        jenisBahanList,
-        jenisWarnaList,
-        jenisUkuranList,
+        result,
       },
     });
   } catch (error) {
