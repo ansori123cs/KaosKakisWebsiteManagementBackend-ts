@@ -206,12 +206,12 @@ export const getKaosKakiDetails = async (
 
       variasi: result.kaosKakiDetailVariasis?.map((f) => ({
         ukuran: {
-          kode: f.jenisUkuran.kodeUkuran,
-          nama: f.jenisUkuran.nama,
+          kode: f.jenisUkuran.kodeUkuran ?? "Undefined",
+          nama: f.jenisUkuran.nama ?? "Undefined",
         },
         warna: {
-          kode: f.jenisWarna.kodeWarna,
-          nama: f.jenisWarna.nama,
+          kode: f.jenisWarna.kodeWarna ?? "Undefined",
+          nama: f.jenisWarna.nama ?? "Undefined",
         },
       })),
     };
