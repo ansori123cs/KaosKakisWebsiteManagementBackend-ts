@@ -7,7 +7,7 @@ import type {
 export interface Machine extends AuditableEntity {
   nama: string;
   kode_mesin: string;
-  status: Status;
+  status: number;
 }
 
 export interface MachineCreateInput {

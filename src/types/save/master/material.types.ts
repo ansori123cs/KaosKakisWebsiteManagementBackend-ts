@@ -7,7 +7,8 @@ import type {
 export interface Material extends AuditableEntity {
   nama: string;
   kode_bahan: string;
-  status: Status;
+  // status: Status;
+  status: number;
 }
 
 export interface MaterialCreateInput {

@@ -13,6 +13,7 @@ import type { Request, Response, NextFunction } from "express";
 import { or, eq, count, and, isNotNull, isNull } from "drizzle-orm";
 import { AppError } from "../../types/middleware/error.types.ts";
 import type {
+  KaosKaki,
   KaosKakiCreateInput,
   KaosKakiDeleteInput,
   KaosKakiUpdateInput1,
@@ -134,6 +135,8 @@ export const getKaosKakiDetails = async (
           columns: {
             id: true,
             nama: true,
+            kodeBahan: true,
+            status: true,
           },
         },
         kaosKakiDetailFotos: {
@@ -148,6 +151,8 @@ export const getKaosKakiDetails = async (
             jenisMesin: {
               columns: {
                 nama: true,
+                kodeMesin: true,
+                status: true,
               },
             },
           },
@@ -171,18 +176,44 @@ export const getKaosKakiDetails = async (
         },
       },
     });
+
     if (!result) {
       throw new AppError("Invalid Kaos Kaki", 404);
     }
-
-    const mappedResult: KaosKakiCreateInput = {
+    const mappedResult: KaosKaki = {
       nama: result.nama,
-      jenis_bahan:result.jenisBahan?.nama
-      foto:
-        result.kaosKakiDetailFotos?.map((f) => ({
-          url: f.url,
-          isPrimary: f.isPrimary,
-        })) ?? [],
+      kode_kaos_kaki: result.kodeKaosKaki ?? "Undefined",
+      keterangan: result.keterangan ?? "",
+      last_order: result.lastOrderDate ?? "Undefined",
+      status: result.status ?? 0,
+
+      jenis_bahan: {
+        nama: result.jenisBahan?.nama ?? "Undefined",
+        kode_bahan: result.jenisBahan?.kodeBahan ?? "Undefined",
+        status: result.jenisBahan?.status ?? 0,
+      },
+
+      foto: result.kaosKakiDetailFotos?.map((f) => ({
+        url: f.url,
+        is_primary: f.isPrimary ?? true,
+      })),
+
+      mesin: result.kaosKakiDetailMesins?.map((f) => ({
+        nama: f.jenisMesin?.nama ?? "Undefined",
+        kode_mesin: f.jenisMesin?.kodeMesin ?? "Undefined",
+        status: f.jenisMesin?.status ?? 0,
+      })),
+
+      variasi: result.kaosKakiDetailVariasis?.map((f) => ({
+        ukuran: {
+          kode: f.jenisUkuran.kodeUkuran,
+          nama: f.jenisUkuran.nama,
+        },
+        warna: {
+          kode: f.jenisWarna.kodeWarna,
+          nama: f.jenisWarna.nama,
+        },
+      })),
     };
     res.status(200).json({
       success: true,

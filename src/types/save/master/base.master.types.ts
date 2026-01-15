@@ -1,7 +1,7 @@
 export interface BaseEntity {
-  id: number;
-  createdAt: Date;
-  updatedAt: Date;
+  id?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Base entity dengan audit trail

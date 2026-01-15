@@ -5,12 +5,23 @@ import { Material } from "../master/material.types.ts";
 export interface KaosKaki extends AuditableEntity {
   nama: string;
   kode_kaos_kaki: string;
-  jenis_bahan: Material;
-  mesin: Machine[];
-  foto: FotoKaosKaki[];
   keterangan: string;
   last_order: string;
   status: number;
+  jenis_bahan: Material;
+  mesin: Machine[];
+  foto: FotoKaosKaki[];
+  variasi: Variasi[];
+}
+
+interface BaseVariasi {
+  nama: string;
+  kode: string;
+}
+
+interface Variasi {
+  warna: BaseVariasi;
+  ukuran: BaseVariasi;
 }
 
 export interface KaosKakiCreateInput extends AuditableEntity {
