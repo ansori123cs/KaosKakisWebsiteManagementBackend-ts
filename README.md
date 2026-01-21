@@ -96,7 +96,7 @@ Use the command `npm run dev` to run the server in development mode with Nodemon
 
 ### API Endpoints
 
-The application provides RESTful APIs with the base path `/api/v1`. Below are the main endpoints:
+The application provides RESTful APIs with the base path `/api/v1`. Below are all available endpoints:
 
 #### Authentication (`/api/v1/auth`)
 
@@ -104,24 +104,71 @@ The application provides RESTful APIs with the base path `/api/v1`. Below are th
 - `POST /Sign-in`: User login (note the capital 'S').
 - `POST /sign-out`: User logout (requires authorization).
 
-#### Master Data
+#### Master Data Management
 
-- `GET/POST/PUT/DELETE /api/v1/machine`: Machine data management.
-- `GET/POST/PUT/DELETE /api/v1/color`: Color data management.
-- `GET/POST/PUT/DELETE /api/v1/size`: Size data management.
-- `GET/POST/PUT/DELETE /api/v1/material`: Material data management.
+All master data endpoints require authentication (add `Authorization: Bearer <token>` header).
+
+**Machine** (`/api/v1/machine`):
+
+- `GET /`: Get all machines with pagination (query: `page`, `limit`).
+- `POST /create`: Create new machine.
+- `GET /:id`: Get specific machine details.
+- `PUT /update/:id`: Update existing machine.
+- `POST /delete/:id`: Delete machine (soft delete).
+
+**Color** (`/api/v1/color`):
+
+- `GET /`: Get all colors with pagination (query: `page`, `limit`).
+- `POST /create`: Create new color.
+- `GET /:id`: Get specific color details.
+- `PUT /update/:id`: Update existing color.
+- `POST /delete/:id`: Delete color (soft delete).
+
+**Size** (`/api/v1/size`):
+
+- `GET /`: Get all sizes with pagination (query: `page`, `limit`).
+- `POST /create`: Create new size.
+- `GET /:id`: Get specific size details.
+- `PUT /update/:id`: Update existing size.
+- `POST /delete/:id`: Delete size (soft delete).
+
+**Material** (`/api/v1/material`):
+
+- `GET /`: Get all materials with pagination (query: `page`, `limit`).
+- `POST /create`: Create new material.
+- `GET /:id`: Get specific material details.
+- `PUT /update/:id`: Update existing material.
+- `POST /delete/:id`: Delete material (soft delete).
 
 #### Transactions
 
-- `GET /api/v1/order`: Get all orders with pagination.
-- `GET /api/v1/order/:id`: Get specific order details.
-- `POST /api/v1/order`: Create new order.
-- `PUT /api/v1/order`: Update existing order.
-- `DELETE /api/v1/order`: Delete order (soft delete).
-- `GET /api/v1/kaos-kaki`: Get kaos kaki transactions.
-- `POST /api/v1/kaos-kaki`: Create kaos kaki transaction.
-- `GET /api/v1/stock`: Get stock information.
-- `POST /api/v1/stock`: Create stock record.
+**Order** (`/api/v1/order`):
+
+- `GET /`: Get all orders with pagination (query: `page`, `limit`).
+- `GET /form/:id`: Get form data for order creation (related kaos kaki).
+- `GET /form/detail/:id`: Get form detail data for order update.
+- `GET /:id`: Get specific order details with related data.
+- `POST /create`: Create new order.
+- `PUT /update/:id`: Update existing order.
+- `DELETE /delete/:id`: Delete order (soft delete).
+
+**Kaos Kaki** (`/api/v1/kaos-kaki`):
+
+- `GET /`: Get all kaos kaki products with pagination (query: `page`, `limit`).
+- `GET /form/:select`: Get form data for kaos kaki creation (select: `machine`, `color`, `material`, `size`).
+- `GET /:id`: Get specific kaos kaki details with variations and photos.
+- `POST /create`: Create new kaos kaki product.
+- `PUT /update/:id`: Update existing kaos kaki.
+- `DELETE /delete/:id`: Delete kaos kaki (soft delete).
+
+**Stock** (`/api/v1/stock`):
+
+- `GET /`: Get all stock information with pagination (query: `page`, `limit`).
+- `GET /form/:id`: Get form data for stock creation.
+- `GET /:id`: Get specific stock details by variation.
+- `POST /create`: Create new stock record.
+- `PUT /update/:id`: Update existing stock.
+- `DELETE /delete/:id`: Delete stock (soft delete).
 
 ### Example Request
 
