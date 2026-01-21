@@ -7,6 +7,7 @@ import {
   kaosKakiDetailFoto,
   kaosKakiDetailMesin,
   kaosKakiDetailVariasi,
+  kaosKakiStok,
 } from "../../models/index.ts";
 import { db } from "../../config/database.ts";
 import type { Request, Response, NextFunction } from "express";
@@ -22,7 +23,7 @@ import type {
 export const getKaosKakiData = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -46,7 +47,7 @@ export const getKaosKakiData = async (
           where: (kaosKakiDetailMesin, { eq, and, isNull }) =>
             and(
               eq(kaosKakiDetailMesin.isDeleted, false),
-              isNull(kaosKakiDetailMesin.deletedAt)
+              isNull(kaosKakiDetailMesin.deletedAt),
             ),
           with: {
             jenisMesin: {
@@ -115,7 +116,7 @@ export const getKaosKakiData = async (
 export const getKaosKakiDetails = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const id = parseInt(req.params.id);
@@ -128,7 +129,7 @@ export const getKaosKakiDetails = async (
         and(
           eq(kaosKaki.id, id),
           eq(kaosKaki.isDeleted, false),
-          isNull(kaosKaki.deletedAt)
+          isNull(kaosKaki.deletedAt),
         ),
       with: {
         jenisBahan: {
@@ -180,6 +181,24 @@ export const getKaosKakiDetails = async (
     if (!result) {
       throw new AppError("Invalid Kaos Kaki", 404);
     }
+    const stokKaosKaki = await db.query.kaosKakiStok.findMany({
+      columns: {
+        stok: true,
+      },
+      with: {
+        jenisUkuran: {
+          columns: {
+            nama: true,
+          },
+        },
+        jenisWarna: {
+          columns: {
+            nama: true,
+          },
+        },
+      },
+      where: eq(kaosKakiStok.idKaos, result?.id),
+    });
     const mappedResult: KaosKaki = {
       nama: result.nama,
       kode_kaos_kaki: result.kodeKaosKaki ?? "Undefined",
@@ -214,6 +233,11 @@ export const getKaosKakiDetails = async (
           nama: f.jenisWarna.nama ?? "Undefined",
         },
       })),
+      stok: stokKaosKaki?.map((f) => ({
+        warna: f.jenisWarna?.nama ?? "Undefined",
+        ukuran: f.jenisUkuran?.nama ?? "Undefined",
+        jumlah: f.stok ?? 0,
+      })),
     };
     res.status(200).json({
       success: true,
@@ -230,7 +254,7 @@ export const getKaosKakiDetails = async (
 export const FormDataKaosKaki = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { select } = req.params;
@@ -275,7 +299,7 @@ export const FormDataKaosKaki = async (
 export const newkaosKakiData = async (
   req: Request<{}, {}, KaosKakiCreateInput>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const payload = req.body;
@@ -291,8 +315,8 @@ export const newkaosKakiData = async (
         .where(
           or(
             eq(kaosKaki.nama, payload.nama.trim()),
-            eq(kaosKaki.kodeKaosKaki, payload.kode_kaos_kaki.trim())
-          )
+            eq(kaosKaki.kodeKaosKaki, payload.kode_kaos_kaki.trim()),
+          ),
         )
         .limit(1);
 
@@ -319,7 +343,7 @@ export const newkaosKakiData = async (
           payload.mesin.map((idMesin) => ({
             kaosKakiId: newKaosKaki.id,
             jenisMesinId: idMesin,
-          }))
+          })),
         );
       }
 
@@ -329,7 +353,7 @@ export const newkaosKakiData = async (
             kaosKakiId: newKaosKaki.id,
             url: foto.url,
             isPrimary: foto.is_primary,
-          }))
+          })),
         );
       }
 
@@ -339,7 +363,7 @@ export const newkaosKakiData = async (
             kaosKakiId: newKaosKaki.id,
             ukuranId: variasi.kodeUkuran,
             warnaId: variasi.kodeWarna,
-          }))
+          })),
         );
       }
 
@@ -359,7 +383,7 @@ export const newkaosKakiData = async (
 export const updatekaosKakiData = async (
   req: Request<{}, {}, KaosKakiUpdateInput1>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const payload = req.body;
@@ -431,7 +455,7 @@ export const updatekaosKakiData = async (
       if (payload.mesin) {
         for (const mesin of payload.mesin) {
           const isExist = checkKaosKakiData.kaosKakiDetailMesins.some(
-            (m: any) => m.jenisMesin?.id === mesin.id_mesin
+            (m: any) => m.jenisMesin?.id === mesin.id_mesin,
           );
 
           if (!isExist && !mesin.isDeleted) {
@@ -453,7 +477,7 @@ export const updatekaosKakiData = async (
       if (payload.foto) {
         for (const foto of payload.foto) {
           const isExist = checkKaosKakiData.kaosKakiDetailFotos.some(
-            (f: any) => f.url === foto.url
+            (f: any) => f.url === foto.url,
           );
 
           if (!isExist && !foto.isDeleted) {
@@ -478,7 +502,7 @@ export const updatekaosKakiData = async (
             (f: any) =>
               f.id === variasi.id &&
               f.ukuranId === variasi.kodeUkuran &&
-              f.warnaId === variasi.kodeWarna
+              f.warnaId === variasi.kodeWarna,
           );
 
           if (!isExist && !variasi.isDeleted) {
@@ -518,7 +542,7 @@ export const updatekaosKakiData = async (
 export const deletekaosKakiData = async (
   req: Request<{}, {}, KaosKakiDeleteInput>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const payload = req.body;

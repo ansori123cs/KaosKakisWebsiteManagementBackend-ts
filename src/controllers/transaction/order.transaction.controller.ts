@@ -25,7 +25,7 @@ import type {
 export const getOrderData = async (
   req: Request<{}, {}, OrderQueryParams>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -106,7 +106,7 @@ export const getOrderData = async (
           itemsPerPage: offset,
           totalItems: total,
           totalPages,
-          hasNetPage: page < totalPages,
+          hasNextPage: page < totalPages,
           hasPreviousPage: page > 1,
         },
       },
@@ -119,7 +119,7 @@ export const getOrderData = async (
 export const getOrderDetails = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const id = parseInt(req.params.id);
@@ -207,7 +207,7 @@ export const getOrderDetails = async (
 export const FormDataOrderKaosKaki = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const search = req.query.search as string | undefined;
@@ -253,7 +253,7 @@ export const FormDataOrderKaosKaki = async (
 export const FormDataOrderDetailKaosKaki = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const id = Number(req.params.id);
@@ -306,56 +306,65 @@ export const FormDataOrderDetailKaosKaki = async (
 export const newOrderData = async (
   req: Request<{}, {}, OrderCreateInput>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const payload = req.body;
 
-    if (!payload) {
-      throw new AppError("Invalid Input", 400);
+    if (
+      !payload ||
+      !payload.createdAt ||
+      !payload.namaPemesan ||
+      !payload.orderDetails?.length
+    ) {
+      throw new AppError(
+        "Invalid Input - namaPemesan, createdAt, and orderDetails are required",
+        400,
+      );
     }
-
     await db.transaction(async (tx) => {
-      const checkDuplicate = await tx
-        .select({ id: pesanan.id })
-        .from(pesanan)
-        .where(
-          and(
-            eq(pesanan.namaPemesan, payload.namaPemesan.trim()),
-            eq(pesanan.createdAt, payload.createdAt.toISOString())
+      if (payload.createdAt) {
+        const checkDuplicate = await tx
+          .select({ id: pesanan.id })
+          .from(pesanan)
+          .where(
+            and(
+              eq(pesanan.namaPemesan, payload.namaPemesan.trim()),
+              eq(pesanan.createdAt, payload.createdAt.toISOString()),
+            ),
           )
-        )
-        .limit(1);
+          .limit(1);
 
-      if (checkDuplicate.length > 0) {
-        throw new AppError(
-          "Pesanan dengan nama dan tanggal yang sama ada kemungkinan duplicate order",
-          400
-        );
-      }
+        if (checkDuplicate.length > 0) {
+          throw new AppError(
+            "Pesanan dengan nama dan tanggal yang sama ada kemungkinan duplicate order",
+            400,
+          );
+        }
 
-      const [newOrder] = await tx
-        .insert(pesanan)
-        .values({
-          namaPemesan: payload.namaPemesan.trim(),
-          catatan: payload.catatan.trim(),
-          createdAt: payload.createdAt.toISOString(),
-        })
-        .returning({
-          id: pesanan.id,
-          nama: pesanan.namaPemesan,
-        });
-
-      if (payload.orderDetails?.length) {
-        for (const variasi of payload.orderDetails) {
-          await tx.insert(pesananDetail).values({
-            kaosKakiVariasiId: variasi.kodeKaosVariasi,
-            hargaSatuan: variasi.price,
-            jumlah: variasi.amount,
-            pesananId: newOrder.id,
-            deletedAt: null,
-            isDeleted: false,
+        const [newOrder] = await tx
+          .insert(pesanan)
+          .values({
+            namaPemesan: payload.namaPemesan.trim(),
+            catatan: payload.catatan.trim(),
+            createdAt: payload.createdAt.toISOString(),
+          })
+          .returning({
+            id: pesanan.id,
+            nama: pesanan.namaPemesan,
           });
+
+        if (payload.orderDetails?.length) {
+          for (const variasi of payload.orderDetails) {
+            await tx.insert(pesananDetail).values({
+              kaosKakiVariasiId: variasi.kodeKaosVariasi,
+              hargaSatuan: variasi.price,
+              jumlah: variasi.amount,
+              pesananId: newOrder.id,
+              deletedAt: null,
+              isDeleted: false,
+            });
+          }
         }
 
         res.status(201).json({
@@ -375,7 +384,7 @@ export const newOrderData = async (
 export const updateOrderData = async (
   req: Request<{}, {}, OrderUpdateInput>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const payload = req.body;
@@ -442,7 +451,7 @@ export const updateOrderData = async (
       if (payload.orderDetails) {
         for (const [index, detail] of payload.orderDetails.entries()) {
           const isExist = checkOrderData.pesananDetails.some(
-            (m: any) => m?.kaosKakiVariasiId === detail.kodeKaosVariasi
+            (m: any) => m?.kaosKakiVariasiId === detail.kodeKaosVariasi,
           );
 
           if (!isExist && !detail.isDeleted) {
@@ -485,7 +494,7 @@ export const updateOrderData = async (
 export const deleteOrderData = async (
   req: Request<{}, {}, OrderDeleteInput>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const payload = req.body;
@@ -495,14 +504,14 @@ export const deleteOrderData = async (
     }
 
     await db.transaction(async (tx) => {
-      const checkDuplicate = await tx
+      const checkOrderExists = await tx
         .select({ id: pesanan.id })
         .from(pesanan)
         .where(eq(pesanan.id, payload.id))
         .limit(1);
 
-      if (checkDuplicate.length > 0) {
-        throw new AppError("Data Doesnt exist", 404);
+      if (checkOrderExists.length === 0) {
+        throw new AppError("Data Doesn't exist", 404);
       }
 
       const [deletedOrderData] = await tx
@@ -521,7 +530,7 @@ export const deleteOrderData = async (
       await tx
         .update(pesananDetail)
         .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-        .where(eq(pesanan.id, payload.id));
+        .where(eq(pesananDetail.pesananId, payload.id));
 
       res.status(201).json({
         success: true,

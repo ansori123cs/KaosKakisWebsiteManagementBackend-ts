@@ -14,6 +14,11 @@ export interface KaosKaki extends AuditableEntity {
   variasi: Variasi[];
 }
 
+interface stok {
+  warna: string;
+  ukuran: string;
+  jumlah: number;
+}
 interface BaseVariasi {
   nama: string;
   kode: string;
