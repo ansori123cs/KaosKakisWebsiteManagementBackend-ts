@@ -1,7 +1,7 @@
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres, { type Sql } from "postgres";
-import { DB_URI } from "./env.ts";
-import * as schema from "../models/index.ts";
+import { DB_URI } from "./env";
+import * as schema from "../models/index";
 
 if (!DB_URI) {
   throw new Error("DB_URI is not defined in environment variables");

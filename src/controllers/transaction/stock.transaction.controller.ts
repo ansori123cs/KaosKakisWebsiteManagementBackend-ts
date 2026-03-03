@@ -2,17 +2,17 @@ import {
   kaosKaki,
   kaosKakiStok,
   kaosKakiDetailVariasi,
-} from "../../models/index.ts";
-import { db } from "../../config/database.ts";
+} from "../../models/index";
+import { db } from "../../config/database";
 import type { Request, Response, NextFunction } from "express";
 import { or, eq, count, and, like, arrayContains, inArray } from "drizzle-orm";
-import { AppError } from "../../types/middleware/error.types.ts";
+import { AppError } from "../../types/middleware/error.types";
 import type {
   StockCreateInput,
   StockDeleteInput,
   StockQueryParams,
   StockUpdateInput,
-} from "../../types/save/transaction/stock.types.ts";
+} from "../../types/save/transaction/stock.types";
 
 export const getStockData = async (
   req: Request<{}, {}, StockQueryParams>,

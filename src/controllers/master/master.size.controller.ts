@@ -1,12 +1,12 @@
-import { db } from "../../config/database.ts";
-import { jenisUkuran } from "../../models/schema.ts";
+import { db } from "../../config/database";
+import { jenisUkuran } from "../../models/schema";
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import type {
   SizeCreateInput,
   SizeUpdateInput,
-} from "../../types/save/master/size.types .ts";
-import { AppError } from "../../types/middleware/error.types.ts";
+} from "../../types/save/master/size.types ";
+import { AppError } from "../../types/middleware/error.types";
 
 export const getSizeData = async (
   req: Request,

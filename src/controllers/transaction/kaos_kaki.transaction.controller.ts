@@ -8,17 +8,17 @@ import {
   kaosKakiDetailMesin,
   kaosKakiDetailVariasi,
   kaosKakiStok,
-} from "../../models/index.ts";
-import { db } from "../../config/database.ts";
+} from "../../models/index";
+import { db } from "../../config/database";
 import type { Request, Response, NextFunction } from "express";
 import { or, eq, count, and, isNotNull, isNull } from "drizzle-orm";
-import { AppError } from "../../types/middleware/error.types.ts";
+import { AppError } from "../../types/middleware/error.types";
 import type {
   KaosKaki,
   KaosKakiCreateInput,
   KaosKakiDeleteInput,
   KaosKakiUpdateInput1,
-} from "../../types/save/transaction/kaos_kaki.types.ts";
+} from "../../types/save/transaction/kaos_kaki.types";
 
 export const getKaosKakiData = async (
   req: Request,

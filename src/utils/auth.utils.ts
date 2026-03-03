@@ -1,4 +1,4 @@
-import { JWT_SECRET } from "@/config/env.ts";
+import { JWT_SECRET } from "../config/env";
 import jwt from "jsonwebtoken";
 
 export const VerifyRefreshToken = async (

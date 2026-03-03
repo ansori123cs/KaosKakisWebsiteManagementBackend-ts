@@ -1,4 +1,4 @@
-import { authorize } from "../../middlewares/auth.middleware.ts";
+import { authorize } from "../../middlewares/auth.middleware";
 import { Router } from "express";
 import {
   deleteSizeData,
@@ -6,7 +6,7 @@ import {
   getSizeDetails,
   newSizeData,
   updateSizeData,
-} from "../../controllers/master/master.size.controller.ts";
+} from "../../controllers/master/master.size.controller";
 
 const sizeRouter = Router();
 

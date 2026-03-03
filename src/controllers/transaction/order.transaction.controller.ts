@@ -6,21 +6,21 @@ import {
   kaosKakiStok,
   pesanan,
   pesananDetail,
-} from "../../models/index.ts";
-import { db } from "../../config/database.ts";
+} from "../../models/index";
+import { db } from "../../config/database";
 import type { Request, Response, NextFunction } from "express";
 import { or, eq, count, and, like, arrayContains, inArray } from "drizzle-orm";
-import { AppError } from "../../types/middleware/error.types.ts";
+import { AppError } from "../../types/middleware/error.types";
 import type {
   KaosKakiDeleteInput,
   KaosKakiUpdateInput1,
-} from "../../types/save/transaction/kaos_kaki.types.ts";
+} from "../../types/save/transaction/kaos_kaki.types";
 import type {
   OrderCreateInput,
   OrderDeleteInput,
   OrderQueryParams,
   OrderUpdateInput,
-} from "../../types/save/transaction/order.types.ts";
+} from "../../types/save/transaction/order.types";
 
 export const getOrderData = async (
   req: Request<{}, {}, OrderQueryParams>,

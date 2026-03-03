@@ -1,12 +1,12 @@
 // Export semua dari schema
-export * from "./schema.ts";
+export * from "./schema";
 
 // Export semua dari relations
-export * from "./relations.ts";
+export * from "./relations";
 
 // Atau gabungkan dengan nama yang jelas
-import * as schema from "./schema.ts";
-import * as relations from "./relations.ts";
+import * as schema from "./schema";
+import * as relations from "./relations";
 
 // Export sebagai object gabungan
 export const dbSchema = {

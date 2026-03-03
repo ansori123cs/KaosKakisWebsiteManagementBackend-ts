@@ -5,7 +5,7 @@ import {
   getStockDetails,
   newStockData,
   updateStockData,
-} from "../../controllers/transaction/stock.transaction.controller.ts";
+} from "../../controllers/transaction/stock.transaction.controller";
 import { Router } from "express";
 
 const stockRouter = Router();

@@ -1,4 +1,4 @@
-import { BaseEntity, Status, AuditableEntity } from "./base.master.types.ts";
+import { BaseEntity, Status, AuditableEntity } from "./base.master.types";
 
 export interface Product extends AuditableEntity {
   name: string;

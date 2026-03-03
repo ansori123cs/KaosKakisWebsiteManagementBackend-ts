@@ -1,13 +1,13 @@
-import { db } from "../../config/database.ts";
-import { JWT_EXPIRES_IN, JWT_SECRET } from "../../config/env.ts";
-import { users } from "../../models/schema.ts";
+import { db } from "../../config/database";
+import { JWT_EXPIRES_IN, JWT_SECRET } from "../../config/env";
+import { users } from "../../models/schema";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
-import { AppError } from "../../types/middleware/error.types.ts";
-import type { SignInPayload, SignUpPayload } from "../../types/global.d.ts";
+import { AppError } from "../../types/middleware/error.types";
+import type { SignInPayload, SignUpPayload } from "../../types/global.d";
 
 // Sign Up - Controller
 export const SignUp = async (

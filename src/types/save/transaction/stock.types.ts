@@ -1,4 +1,4 @@
-import type { AuditableEntity, Status } from "../master/base.master.types.ts";
+import type { AuditableEntity, Status } from "../master/base.master.types";
 
 export interface Stock extends AuditableEntity {
   kodeVariasi: number;

@@ -1,4 +1,4 @@
-import { DB_URI } from "@/config/env.ts";
+import { DB_URI } from "../config/env";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 

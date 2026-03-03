@@ -6,7 +6,7 @@ import {
   getOrderDetails,
   newOrderData,
   updateOrderData,
-} from "../../controllers/transaction/order.transaction.controller.ts";
+} from "../../controllers/transaction/order.transaction.controller";
 import { Router } from "express";
 
 const orderRouter = Router();

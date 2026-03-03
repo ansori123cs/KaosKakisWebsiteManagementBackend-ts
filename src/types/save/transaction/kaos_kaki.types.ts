@@ -1,6 +1,6 @@
-import { AuditableEntity, Status } from "../master/base.master.types.ts";
-import { Machine } from "../master/machine.types.ts";
-import { Material } from "../master/material.types.ts";
+import { AuditableEntity, Status } from "../master/base.master.types";
+import { Machine } from "../master/machine.types";
+import { Material } from "../master/material.types";
 
 export interface KaosKaki extends AuditableEntity {
   nama: string;
@@ -12,6 +12,7 @@ export interface KaosKaki extends AuditableEntity {
   mesin: Machine[];
   foto: FotoKaosKaki[];
   variasi: Variasi[];
+  stok:stok[]
 }
 
 interface stok {

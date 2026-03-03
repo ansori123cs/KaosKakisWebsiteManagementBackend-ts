@@ -2,7 +2,7 @@ import type {
   BaseEntity,
   Status,
   AuditableEntity,
-} from "./base.master.types.ts";
+} from "./base.master.types";
 
 export interface Machine extends AuditableEntity {
   nama: string;

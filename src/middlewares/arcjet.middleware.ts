@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import aj from "../config/arcjet.ts";
+import aj from "../config/arcjet";
 
 const arcjetMiddleware = async (
   req: Request,

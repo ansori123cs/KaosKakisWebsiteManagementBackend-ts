@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { NODE_ENV } from "../config/env.ts";
+import { NODE_ENV } from "../config/env";
 import type {
   CustomError,
   ErrorResponse,

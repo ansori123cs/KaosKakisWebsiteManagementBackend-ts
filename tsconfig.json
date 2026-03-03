@@ -1,17 +1,12 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "sourceMap": true,
     "rootDir": "./src",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "dist",
+    "outDir": "./dist",
+    "module": "CommonJS",
+    "target": "ES2020",
+    "moduleResolution": "Node",
     "strict": true,
-    "lib": ["esnext"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "sourceMap": true
   }
 }

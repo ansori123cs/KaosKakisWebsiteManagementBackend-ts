@@ -1,12 +1,12 @@
-import { db } from "../../config/database.ts";
-import { jenisBahan } from "../../models/schema.ts";
+import { db } from "../../config/database";
+import { jenisBahan } from "../../models/schema";
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import type {
   MaterialCreateInput,
   MaterialUpdateInput,
-} from "../../types/save/master/material.types.ts";
-import { AppError } from "../../types/middleware/error.types.ts";
+} from "../../types/save/master/material.types";
+import { AppError } from "../../types/middleware/error.types";
 
 export const getMaterialData = async (
   req: Request,

@@ -11,7 +11,7 @@ import {
   kaosKakiStok,
   jenisUkuran,
   jenisWarna,
-} from "./schema.ts";
+} from "./schema";
 
 export const kaosKakiRelations = relations(kaosKaki, ({ one, many }) => ({
   jenisBahan: one(jenisBahan, {

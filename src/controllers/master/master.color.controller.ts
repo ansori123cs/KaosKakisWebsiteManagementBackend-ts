@@ -1,12 +1,12 @@
-import { db } from "../../config/database.ts";
-import { jenisWarna } from "../../models/schema.ts";
+import { db } from "../../config/database";
+import { jenisWarna } from "../../models/schema";
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
-import { AppError } from "../../types/middleware/error.types.ts";
+import { AppError } from "../../types/middleware/error.types";
 import type {
   ColorCreateInput,
   ColorUpdateInput,
-} from "../../types/save/master/color.types.ts";
+} from "../../types/save/master/color.types";
 
 export const getColorData = async (
   req: Request,

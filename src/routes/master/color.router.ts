@@ -1,4 +1,4 @@
-import { authorize } from "../../middlewares/auth.middleware.ts";
+import { authorize } from "../../middlewares/auth.middleware";
 import { Router } from "express";
 import {
   deleteColorData,
@@ -6,7 +6,7 @@ import {
   getColorDetails,
   newColorData,
   updateColorData,
-} from "../../controllers/master/master.color.controller.ts";
+} from "../../controllers/master/master.color.controller";
 
 const colorRouter = Router();
 
