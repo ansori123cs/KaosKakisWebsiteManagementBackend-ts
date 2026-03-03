@@ -81,6 +81,7 @@ export const authorize = async (
 export const authorizeRole = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
+      
       return res
         .status(401)
         .json({ success: false, message: "Unauthorize ; User not Registered" });

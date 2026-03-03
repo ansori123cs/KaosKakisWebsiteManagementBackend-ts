@@ -68,3 +68,5 @@ table.sql
 
 #ignore upload folder
 uploads/
+
+dist/*
