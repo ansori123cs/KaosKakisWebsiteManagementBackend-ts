@@ -1,4 +1,3 @@
-"use strict";
 // // src/services/machine.service.ts
 // import { machineRepository } from "@/repositories/machine.repository";
 // import { AppError } from "../../types/middleware/error.types.ts";
@@ -10,6 +9,7 @@
 // } from "../../types/save/master/machine.types.ts";
 // import { PaginationParams } from "../../types/save/master/base.master.types.ts";
 // import { PaginatedResponse } from "../../types/api/response.types.ts";
+export {};
 // export class MachineService {
 //   /**
 //    * Get machine by ID
@@ -178,4 +178,3 @@
 // }
 // // Singleton instance
 // export const machineService = new MachineService();
-//# sourceMappingURL=machine.service.js.map

@@ -1,5 +1,5 @@
-"use strict";
 // // src/services/kaos-kaki-update.service
+export {};
 // import { eq } from "drizzle-orm";
 // import { AppError } from "../../types/middleware/error.types";
 // import {
@@ -324,4 +324,3 @@
 //     };
 //   }
 // }
-//# sourceMappingURL=kaosKaki.service.js.map

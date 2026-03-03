@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
-import { NODE_ENV } from "../config/env";
+import { NODE_ENV } from "../config/env.js";
 import type {
   CustomError,
   ErrorResponse,
-} from "../types/utils/generic.types.ts";
+} from "../types/utils/generic.types.js";
 
 const isDev = NODE_ENV === "development";
 

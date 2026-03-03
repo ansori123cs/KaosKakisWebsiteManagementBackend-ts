@@ -5,7 +5,7 @@ import {
   FormDataKaosKaki,
   updatekaosKakiData,
   deletekaosKakiData,
-} from "../../controllers/transaction/kaos_kaki.transaction.controller";
+} from "../../controllers/transaction/kaos_kaki.transaction.controller.js";
 import { Router } from "express";
 
 const kaosKakiRouter = Router();

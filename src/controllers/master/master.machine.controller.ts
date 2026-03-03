@@ -1,12 +1,12 @@
-import { db } from "../../config/database";
-import { jenisMesin } from "../../models/schema";
+import { db } from "../../config/database.js";
+import { jenisMesin } from "../../models/schema.js";
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { Request, Response, NextFunction } from "express";
 import type {
   MachineCreateInput,
   MachineUpdateInput,
-} from "../../types/save/master/machine.types";
-import { AppError } from "../../types/middleware/error.types";
+} from "../../types/save/master/machine.types.js";
+import { AppError } from "../../types/middleware/error.types.js";
 
 export const getMachineData = async (
   req: Request,

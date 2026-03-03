@@ -1,16 +1,13 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletekaosKakiData = exports.updatekaosKakiData = exports.newkaosKakiData = exports.FormDataKaosKaki = exports.getKaosKakiDetails = exports.getKaosKakiData = void 0;
-const index_1 = require("../../models/index");
-const database_1 = require("../../config/database");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getKaosKakiData = async (req, res, next) => {
+import { jenisBahan, jenisMesin, jenisUkuran, jenisWarna, kaosKaki, kaosKakiDetailFoto, kaosKakiDetailMesin, kaosKakiDetailVariasi, kaosKakiStok, } from "../../models/index.js";
+import { db } from "../../config/database.js";
+import { or, eq, count, and, isNull } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getKaosKakiData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const result = await database_1.db.query.kaosKaki.findMany({
+        const result = await db.query.kaosKaki.findMany({
             columns: {
                 nama: true,
                 lastOrderDate: true,
@@ -44,10 +41,10 @@ const getKaosKakiData = async (req, res, next) => {
             jenisBahan: item.jenisBahan?.nama ?? null,
             jenisMesin: item.kaosKakiDetailMesins.map((m) => m.jenisMesin?.nama),
         }));
-        const [{ total }] = await database_1.db
-            .select({ total: (0, drizzle_orm_1.count)() })
-            .from(index_1.kaosKaki)
-            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(index_1.kaosKaki.isDeleted, false), (0, drizzle_orm_1.isNull)(index_1.kaosKaki.deletedAt)));
+        const [{ total }] = await db
+            .select({ total: count() })
+            .from(kaosKaki)
+            .where(and(eq(kaosKaki.isDeleted, false), isNull(kaosKaki.deletedAt)));
         const totalPages = Math.ceil(total / limit);
         if (result.length === 0) {
             return res.status(200).json({
@@ -83,14 +80,13 @@ const getKaosKakiData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getKaosKakiData = getKaosKakiData;
-const getKaosKakiDetails = async (req, res, next) => {
+export const getKaosKakiDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid Kaos Kaki", 400);
+            throw new AppError("Invalid Kaos Kaki", 400);
         }
-        const result = await database_1.db.query.kaosKaki.findFirst({
+        const result = await db.query.kaosKaki.findFirst({
             where: (kaosKaki, { eq, and, isNull }) => and(eq(kaosKaki.id, id), eq(kaosKaki.isDeleted, false), isNull(kaosKaki.deletedAt)),
             with: {
                 jenisBahan: {
@@ -139,9 +135,9 @@ const getKaosKakiDetails = async (req, res, next) => {
             },
         });
         if (!result) {
-            throw new error_types_1.AppError("Invalid Kaos Kaki", 404);
+            throw new AppError("Invalid Kaos Kaki", 404);
         }
-        const stokKaosKaki = await database_1.db.query.kaosKakiStok.findMany({
+        const stokKaosKaki = await db.query.kaosKakiStok.findMany({
             columns: {
                 stok: true,
             },
@@ -157,7 +153,7 @@ const getKaosKakiDetails = async (req, res, next) => {
                     },
                 },
             },
-            where: (0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idKaos, result?.id),
+            where: eq(kaosKakiStok.idKaos, result?.id),
         });
         const mappedResult = {
             nama: result.nama,
@@ -207,30 +203,29 @@ const getKaosKakiDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getKaosKakiDetails = getKaosKakiDetails;
-const FormDataKaosKaki = async (req, res, next) => {
+export const FormDataKaosKaki = async (req, res, next) => {
     try {
         const { select } = req.params;
         if (!select) {
-            throw new error_types_1.AppError("Invalid Select Option", 400);
+            throw new AppError("Invalid Select Option", 400);
         }
         const configMap = {
-            "select-mesin": index_1.jenisMesin,
-            "select-bahan": index_1.jenisBahan,
-            "select-warna": index_1.jenisWarna,
-            "select-ukuran": index_1.jenisUkuran,
+            "select-mesin": jenisMesin,
+            "select-bahan": jenisBahan,
+            "select-warna": jenisWarna,
+            "select-ukuran": jenisUkuran,
         };
         const table = configMap[select];
         if (!table) {
-            throw new error_types_1.AppError("Invalid Select Option", 400);
+            throw new AppError("Invalid Select Option", 400);
         }
-        const result = await database_1.db
+        const result = await db
             .select({
             kode: table.id,
             nama: table.nama,
         })
             .from(table)
-            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(table.isDeleted, false), (0, drizzle_orm_1.isNull)(table.deletedAt)));
+            .where(and(eq(table.isDeleted, false), isNull(table.deletedAt)));
         return res.status(200).json({
             success: true,
             message: "Success load form data",
@@ -243,24 +238,23 @@ const FormDataKaosKaki = async (req, res, next) => {
         next(error);
     }
 };
-exports.FormDataKaosKaki = FormDataKaosKaki;
-const newkaosKakiData = async (req, res, next) => {
+export const newkaosKakiData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload) {
-            throw new error_types_1.AppError("Invalid Input", 400);
+            throw new AppError("Invalid Input", 400);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const checkDuplicate = await tx
-                .select({ id: index_1.kaosKaki.id })
-                .from(index_1.kaosKaki)
-                .where((0, drizzle_orm_1.or)((0, drizzle_orm_1.eq)(index_1.kaosKaki.nama, payload.nama.trim()), (0, drizzle_orm_1.eq)(index_1.kaosKaki.kodeKaosKaki, payload.kode_kaos_kaki.trim())))
+                .select({ id: kaosKaki.id })
+                .from(kaosKaki)
+                .where(or(eq(kaosKaki.nama, payload.nama.trim()), eq(kaosKaki.kodeKaosKaki, payload.kode_kaos_kaki.trim())))
                 .limit(1);
             if (checkDuplicate.length > 0) {
-                throw new error_types_1.AppError("Duplicate Name Or Kode", 400);
+                throw new AppError("Duplicate Name Or Kode", 400);
             }
             const [newKaosKaki] = await tx
-                .insert(index_1.kaosKaki)
+                .insert(kaosKaki)
                 .values({
                 nama: payload.nama.trim(),
                 kodeKaosKaki: payload.kode_kaos_kaki.trim(),
@@ -269,24 +263,24 @@ const newkaosKakiData = async (req, res, next) => {
                 jenisBahanId: payload.jenis_bahan,
             })
                 .returning({
-                id: index_1.kaosKaki.id,
-                nama: index_1.kaosKaki.nama,
+                id: kaosKaki.id,
+                nama: kaosKaki.nama,
             });
             if (payload.mesin?.length) {
-                await tx.insert(index_1.kaosKakiDetailMesin).values(payload.mesin.map((idMesin) => ({
+                await tx.insert(kaosKakiDetailMesin).values(payload.mesin.map((idMesin) => ({
                     kaosKakiId: newKaosKaki.id,
                     jenisMesinId: idMesin,
                 })));
             }
             if (payload.foto?.length) {
-                await tx.insert(index_1.kaosKakiDetailFoto).values(payload.foto.map((foto) => ({
+                await tx.insert(kaosKakiDetailFoto).values(payload.foto.map((foto) => ({
                     kaosKakiId: newKaosKaki.id,
                     url: foto.url,
                     isPrimary: foto.is_primary,
                 })));
             }
             if (payload.kaosKakiVariasi?.length) {
-                await tx.insert(index_1.kaosKakiDetailVariasi).values(payload.kaosKakiVariasi.map((variasi) => ({
+                await tx.insert(kaosKakiDetailVariasi).values(payload.kaosKakiVariasi.map((variasi) => ({
                     kaosKakiId: newKaosKaki.id,
                     ukuranId: variasi.kodeUkuran,
                     warnaId: variasi.kodeWarna,
@@ -305,15 +299,14 @@ const newkaosKakiData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newkaosKakiData = newkaosKakiData;
-const updatekaosKakiData = async (req, res, next) => {
+export const updatekaosKakiData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload?.id) {
-            throw new error_types_1.AppError("ID and at least one field update are required", 400);
+            throw new AppError("ID and at least one field update are required", 400);
         }
-        const checkKaosKakiData = (await database_1.db.query.kaosKaki.findFirst({
-            where: (0, drizzle_orm_1.eq)(index_1.kaosKaki.id, payload.id),
+        const checkKaosKakiData = (await db.query.kaosKaki.findFirst({
+            where: eq(kaosKaki.id, payload.id),
             with: {
                 kaosKakiDetailFotos: {
                     columns: { id: true, url: true },
@@ -327,9 +320,9 @@ const updatekaosKakiData = async (req, res, next) => {
             },
         }));
         if (!checkKaosKakiData) {
-            throw new error_types_1.AppError("Kaos kaki data not found", 404);
+            throw new AppError("Kaos kaki data not found", 404);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const updateData = {
                 updatedAt: new Date().toISOString(),
             };
@@ -359,16 +352,16 @@ const updatekaosKakiData = async (req, res, next) => {
                 for (const mesin of payload.mesin) {
                     const isExist = checkKaosKakiData.kaosKakiDetailMesins.some((m) => m.jenisMesin?.id === mesin.id_mesin);
                     if (!isExist && !mesin.isDeleted) {
-                        await tx.insert(index_1.kaosKakiDetailMesin).values({
+                        await tx.insert(kaosKakiDetailMesin).values({
                             kaosKakiId: payload.id,
                             jenisMesinId: mesin.id_mesin,
                         });
                     }
                     if (isExist && mesin.isDeleted) {
                         await tx
-                            .update(index_1.kaosKakiDetailMesin)
+                            .update(kaosKakiDetailMesin)
                             .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                            .where((0, drizzle_orm_1.eq)(index_1.kaosKakiDetailMesin.jenisMesinId, mesin.id_mesin));
+                            .where(eq(kaosKakiDetailMesin.jenisMesinId, mesin.id_mesin));
                     }
                 }
             }
@@ -376,16 +369,16 @@ const updatekaosKakiData = async (req, res, next) => {
                 for (const foto of payload.foto) {
                     const isExist = checkKaosKakiData.kaosKakiDetailFotos.some((f) => f.url === foto.url);
                     if (!isExist && !foto.isDeleted) {
-                        await tx.insert(index_1.kaosKakiDetailFoto).values({
+                        await tx.insert(kaosKakiDetailFoto).values({
                             kaosKakiId: payload.id,
                             url: foto.url,
                         });
                     }
                     if (isExist && foto.isDeleted) {
                         await tx
-                            .update(index_1.kaosKakiDetailFoto)
+                            .update(kaosKakiDetailFoto)
                             .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                            .where((0, drizzle_orm_1.eq)(index_1.kaosKakiDetailFoto.url, foto.url));
+                            .where(eq(kaosKakiDetailFoto.url, foto.url));
                     }
                 }
             }
@@ -395,7 +388,7 @@ const updatekaosKakiData = async (req, res, next) => {
                         f.ukuranId === variasi.kodeUkuran &&
                         f.warnaId === variasi.kodeWarna);
                     if (!isExist && !variasi.isDeleted) {
-                        await tx.insert(index_1.kaosKakiDetailVariasi).values({
+                        await tx.insert(kaosKakiDetailVariasi).values({
                             kaosKakiId: payload.id,
                             ukuranId: variasi.kodeUkuran,
                             warnaId: variasi.kodeWarna,
@@ -403,17 +396,17 @@ const updatekaosKakiData = async (req, res, next) => {
                     }
                     if (isExist && variasi.isDeleted) {
                         await tx
-                            .update(index_1.kaosKakiDetailVariasi)
+                            .update(kaosKakiDetailVariasi)
                             .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                            .where((0, drizzle_orm_1.eq)(index_1.kaosKakiDetailVariasi.id, variasi.id));
+                            .where(eq(kaosKakiDetailVariasi.id, variasi.id));
                     }
                 }
             }
             if (Object.keys(updateData).length > 1) {
                 await tx
-                    .update(index_1.kaosKaki)
+                    .update(kaosKaki)
                     .set(updateData)
-                    .where((0, drizzle_orm_1.eq)(index_1.kaosKaki.id, payload.id));
+                    .where(eq(kaosKaki.id, payload.id));
             }
         });
         res.status(200).json({
@@ -425,46 +418,45 @@ const updatekaosKakiData = async (req, res, next) => {
         next(error);
     }
 };
-exports.updatekaosKakiData = updatekaosKakiData;
-const deletekaosKakiData = async (req, res, next) => {
+export const deletekaosKakiData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || payload.id === undefined || payload.userId === undefined) {
-            throw new error_types_1.AppError("Error During Delete", 404);
+            throw new AppError("Error During Delete", 404);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const checkDuplicate = await tx
-                .select({ id: index_1.kaosKaki.id })
-                .from(index_1.kaosKaki)
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKaki.id, payload.id))
+                .select({ id: kaosKaki.id })
+                .from(kaosKaki)
+                .where(eq(kaosKaki.id, payload.id))
                 .limit(1);
             if (checkDuplicate.length > 0) {
-                throw new error_types_1.AppError("Data Doesnt exist", 404);
+                throw new AppError("Data Doesnt exist", 404);
             }
             const [deletedKaosKaki] = await tx
-                .update(index_1.kaosKaki)
+                .update(kaosKaki)
                 .set({
                 status: 0,
                 isDeleted: true,
                 deletedAt: new Date().toISOString(),
             })
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKaki.id, payload.id))
+                .where(eq(kaosKaki.id, payload.id))
                 .returning({
-                id: index_1.kaosKaki.id,
-                nama: index_1.kaosKaki.nama,
+                id: kaosKaki.id,
+                nama: kaosKaki.nama,
             });
             await tx
-                .update(index_1.kaosKakiDetailMesin)
+                .update(kaosKakiDetailMesin)
                 .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKakiDetailMesin.kaosKakiId, payload.id));
+                .where(eq(kaosKakiDetailMesin.kaosKakiId, payload.id));
             await tx
-                .update(index_1.kaosKakiDetailFoto)
+                .update(kaosKakiDetailFoto)
                 .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKakiDetailFoto.kaosKakiId, payload.id));
+                .where(eq(kaosKakiDetailFoto.kaosKakiId, payload.id));
             await tx
-                .update(index_1.kaosKakiDetailVariasi)
+                .update(kaosKakiDetailVariasi)
                 .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKakiDetailVariasi.kaosKakiId, payload.id));
+                .where(eq(kaosKakiDetailVariasi.kaosKakiId, payload.id));
             res.status(201).json({
                 success: true,
                 message: "Kaos Kaki data deleted successfully",
@@ -478,5 +470,3 @@ const deletekaosKakiData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deletekaosKakiData = deletekaosKakiData;
-//# sourceMappingURL=kaos_kaki.transaction.controller.js.map

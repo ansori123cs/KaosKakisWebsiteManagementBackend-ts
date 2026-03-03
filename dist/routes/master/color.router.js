@@ -1,13 +1,10 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const auth_middleware_1 = require("../../middlewares/auth.middleware");
-const express_1 = require("express");
-const master_color_controller_1 = require("../../controllers/master/master.color.controller");
-const colorRouter = (0, express_1.Router)();
-colorRouter.get("/", auth_middleware_1.authorize, master_color_controller_1.getColorData);
-colorRouter.post("/create", auth_middleware_1.authorize, master_color_controller_1.newColorData);
-colorRouter.get("/:id", auth_middleware_1.authorize, master_color_controller_1.getColorDetails);
-colorRouter.put("/update/:id", auth_middleware_1.authorize, master_color_controller_1.updateColorData);
-colorRouter.post("/delete/:id", auth_middleware_1.authorize, master_color_controller_1.deleteColorData);
-exports.default = colorRouter;
-//# sourceMappingURL=color.router.js.map
+import { authorize } from "../../middlewares/auth.middleware.js";
+import { Router } from "express";
+import { deleteColorData, getColorData, getColorDetails, newColorData, updateColorData, } from "../../controllers/master/master.color.controller.js";
+const colorRouter = Router();
+colorRouter.get("/", authorize, getColorData);
+colorRouter.post("/create", authorize, newColorData);
+colorRouter.get("/:id", authorize, getColorDetails);
+colorRouter.put("/update/:id", authorize, updateColorData);
+colorRouter.post("/delete/:id", authorize, deleteColorData);
+export default colorRouter;

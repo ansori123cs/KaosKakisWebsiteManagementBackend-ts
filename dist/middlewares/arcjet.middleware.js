@@ -1,12 +1,7 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const arcjet_1 = __importDefault(require("../config/arcjet"));
+import aj from "../config/arcjet.js";
 const arcjetMiddleware = async (req, res, next) => {
     try {
-        const decission = await arcjet_1.default.protect(req, { requested: 1 });
+        const decission = await aj.protect(req, { requested: 1 });
         if (decission.isDenied()) {
             if (decission.reason.isRateLimit())
                 return res.status(429).json({ error: "Rate Limit Exceeded" });
@@ -21,5 +16,4 @@ const arcjetMiddleware = async (req, res, next) => {
         next(error);
     }
 };
-exports.default = arcjetMiddleware;
-//# sourceMappingURL=arcjet.middleware.js.map
+export default arcjetMiddleware;

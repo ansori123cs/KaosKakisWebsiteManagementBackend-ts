@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const env_1 = require("../config/env");
-const isDev = env_1.NODE_ENV === "development";
+import { NODE_ENV } from "../config/env.js";
+const isDev = NODE_ENV === "development";
 const errorMiddleware = (err, req, res, next) => {
     try {
         if (isDev) {
@@ -81,5 +79,4 @@ const errorMiddleware = (err, req, res, next) => {
         });
     }
 };
-exports.default = errorMiddleware;
-//# sourceMappingURL=error.middleware.js.map
+export default errorMiddleware;

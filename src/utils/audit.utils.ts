@@ -1,5 +1,5 @@
-import { auditLog } from "../models/index";
-import { db } from "../config/database";
+import { auditLog } from "../models/index.js";
+import { db } from "../config/database.js";
 
 export const AuditLogsUtils = async (
   userId: string,

@@ -1,4 +1,3 @@
-"use strict";
 // // src/repositories/machine.repository.ts
 // import { eq, asc, desc, sql, count, like, or } from "drizzle-orm";
 // import { jenisMesin } from "../../models/schema.ts";
@@ -10,6 +9,7 @@
 //   MachineQueryParams,
 // } from "../../types/save/master/machine.types.ts";
 // import { PaginationParams } from "../../types/save/master/base.master.types.ts";
+export {};
 // export class MachineRepository {
 //   /**
 //    * Find machine by ID
@@ -162,4 +162,3 @@
 // }
 // // Singleton instance
 // export const machineRepository = new MachineRepository();
-//# sourceMappingURL=machine.repositories.js.map

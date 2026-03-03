@@ -1,26 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSizeDataPermanent = exports.deleteSizeData = exports.updateSizeData = exports.newSizeData = exports.getSizeDetails = exports.getSizeData = void 0;
-const database_1 = require("../../config/database");
-const schema_1 = require("../../models/schema");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getSizeData = async (req, res, next) => {
+import { db } from "../../config/database.js";
+import { jenisUkuran } from "../../models/schema.js";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getSizeData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const rows = await database_1.db
+        const rows = await db
             .select({
-            nama: schema_1.jenisUkuran.nama,
-            kode: schema_1.jenisUkuran.kodeUkuran,
+            nama: jenisUkuran.nama,
+            kode: jenisUkuran.kodeUkuran,
         })
-            .from(schema_1.jenisUkuran)
-            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.jenisUkuran.isDeleted, false), (0, drizzle_orm_1.isNull)(schema_1.jenisUkuran.deletedAt)))
-            .orderBy((0, drizzle_orm_1.asc)(schema_1.jenisUkuran.nama))
+            .from(jenisUkuran)
+            .where(and(eq(jenisUkuran.isDeleted, false), isNull(jenisUkuran.deletedAt)))
+            .orderBy(asc(jenisUkuran.nama))
             .limit(limit)
             .offset(offset);
-        const [{ total }] = await database_1.db.select({ total: (0, drizzle_orm_1.count)() }).from(schema_1.jenisUkuran);
+        const [{ total }] = await db.select({ total: count() }).from(jenisUkuran);
         const totalPages = Math.ceil(total / limit);
         if (rows.length === 0) {
             return res.status(200).json({
@@ -56,25 +53,24 @@ const getSizeData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getSizeData = getSizeData;
-const getSizeDetails = async (req, res, next) => {
+export const getSizeDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid size ID", 400);
+            throw new AppError("Invalid size ID", 400);
         }
-        const [detailMasterData] = await database_1.db
+        const [detailMasterData] = await db
             .select({
-            nama: schema_1.jenisUkuran.nama,
-            kode: schema_1.jenisUkuran.kodeUkuran,
-            createdAt: schema_1.jenisUkuran.createdAt,
-            updatedAt: schema_1.jenisUkuran.updatedAt,
+            nama: jenisUkuran.nama,
+            kode: jenisUkuran.kodeUkuran,
+            createdAt: jenisUkuran.createdAt,
+            updatedAt: jenisUkuran.updatedAt,
         })
-            .from(schema_1.jenisUkuran)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisUkuran.id, id))
+            .from(jenisUkuran)
+            .where(eq(jenisUkuran.id, id))
             .limit(1);
         if (!detailMasterData) {
-            throw new error_types_1.AppError("Size not found", 404);
+            throw new AppError("Size not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -88,15 +84,14 @@ const getSizeDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getSizeDetails = getSizeDetails;
-const newSizeData = async (req, res, next) => {
+export const newSizeData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.nama || !payload.kode_ukuran) {
-            throw new error_types_1.AppError("All fields are required", 400);
+            throw new AppError("All fields are required", 400);
         }
-        const [newMasterData] = await database_1.db
-            .insert(schema_1.jenisUkuran)
+        const [newMasterData] = await db
+            .insert(jenisUkuran)
             .values({
             nama: payload.nama.trim(),
             kodeUkuran: payload.kode_ukuran.trim(),
@@ -107,7 +102,7 @@ const newSizeData = async (req, res, next) => {
             deletedAt: null,
         })
             .returning({
-            nama: schema_1.jenisUkuran.nama,
+            nama: jenisUkuran.nama,
         });
         res.status(201).json({
             success: true,
@@ -123,14 +118,13 @@ const newSizeData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newSizeData = newSizeData;
-const updateSizeData = async (req, res, next) => {
+export const updateSizeData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload ||
             !payload.id ||
             (!payload.nama && !payload.kode_ukuran && payload.status === undefined)) {
-            throw new error_types_1.AppError("ID and at least one field to update are required", 400);
+            throw new AppError("ID and at least one field to update are required", 400);
         }
         const updateData = {
             updatedAt: new Date().toISOString(),
@@ -148,15 +142,15 @@ const updateSizeData = async (req, res, next) => {
             updateData.isDeleted = payload.isDeleted;
             updateData.deletedAt = new Date().toISOString();
         }
-        const [updatedMasterData] = await database_1.db
-            .update(schema_1.jenisUkuran)
+        const [updatedMasterData] = await db
+            .update(jenisUkuran)
             .set(updateData)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisUkuran.id, payload.id))
+            .where(eq(jenisUkuran.id, payload.id))
             .returning({
-            nama: schema_1.jenisUkuran.nama,
+            nama: jenisUkuran.nama,
         });
         if (!updatedMasterData) {
-            throw new error_types_1.AppError("Size not found", 404);
+            throw new AppError("Size not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -172,30 +166,29 @@ const updateSizeData = async (req, res, next) => {
         next(error);
     }
 };
-exports.updateSizeData = updateSizeData;
 // Soft delete
-const deleteSizeData = async (req, res, next) => {
+export const deleteSizeData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Size ID is Not Valid", 400);
+            throw new AppError("Size ID is Not Valid", 400);
         }
         if (isNaN(payload.id)) {
-            throw new error_types_1.AppError("Size ID is Not Valid", 400);
+            throw new AppError("Size ID is Not Valid", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .update(schema_1.jenisUkuran)
+        const [deletedMasterData] = await db
+            .update(jenisUkuran)
             .set({
             status: 0,
             isDeleted: true,
             deletedAt: new Date().toISOString(),
         })
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisUkuran.id, payload.id))
+            .where(eq(jenisUkuran.id, payload.id))
             .returning({
-            nama: schema_1.jenisUkuran.nama,
+            nama: jenisUkuran.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Size not found", 404);
+            throw new AppError("Size not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -211,22 +204,21 @@ const deleteSizeData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteSizeData = deleteSizeData;
 // Permanent delete
-const deleteSizeDataPermanent = async (req, res, next) => {
+export const deleteSizeDataPermanent = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Size ID is required", 400);
+            throw new AppError("Size ID is required", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .delete(schema_1.jenisUkuran)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisUkuran.id, payload.id))
+        const [deletedMasterData] = await db
+            .delete(jenisUkuran)
+            .where(eq(jenisUkuran.id, payload.id))
             .returning({
-            nama: schema_1.jenisUkuran.nama,
+            nama: jenisUkuran.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Size not found", 404);
+            throw new AppError("Size not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -242,5 +234,3 @@ const deleteSizeDataPermanent = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteSizeDataPermanent = deleteSizeDataPermanent;
-//# sourceMappingURL=master.size.controller.js.map

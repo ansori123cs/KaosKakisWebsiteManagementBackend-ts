@@ -1,11 +1,11 @@
-import { authorize } from "../../middlewares/auth.middleware";
+import { authorize } from "../../middlewares/auth.middleware.js";
 import {
   deleteMachineData,
   getMachineData,
   getMachineDetails,
   newMachineData,
   updateMachineData,
-} from "../../controllers/master/master.machine.controller";
+} from "../../controllers/master/master.machine.controller.js";
 import { Router } from "express";
 
 const machineRouter = Router();

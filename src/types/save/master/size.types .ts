@@ -2,7 +2,7 @@ import type {
   BaseEntity,
   Status,
   AuditableEntity,
-} from "./base.master.types";
+} from "./base.master.types.js";
 
 export interface Size extends AuditableEntity {
   nama: string;

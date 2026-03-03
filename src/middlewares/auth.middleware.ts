@@ -1,6 +1,6 @@
-import { db } from "../config/database";
-import { JWT_SECRET, NODE_ENV } from "../config/env";
-import { users } from "../models/schema";
+import { db } from "../config/database.js";
+import { JWT_SECRET, NODE_ENV } from "../config/env.js";
+import { users } from "../models/schema.js";
 import { eq } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";

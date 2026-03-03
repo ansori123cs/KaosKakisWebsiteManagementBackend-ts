@@ -1,16 +1,13 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteStockData = exports.updateStockData = exports.newStockData = exports.FormDataStokKaosKaki = exports.getStockDetails = exports.getStockData = void 0;
-const index_1 = require("../../models/index");
-const database_1 = require("../../config/database");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getStockData = async (req, res, next) => {
+import { kaosKaki, kaosKakiStok, kaosKakiDetailVariasi, } from "../../models/index.js";
+import { db } from "../../config/database.js";
+import { eq, count, and, like, inArray } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getStockData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const result = await database_1.db.query.kaosKakiStok.findMany({
+        const result = await db.query.kaosKakiStok.findMany({
             columns: {
                 id: true,
                 stok: true,
@@ -37,10 +34,10 @@ const getStockData = async (req, res, next) => {
             where: (kaosKakiStok, { eq }) => eq(kaosKakiStok.isDeleted, false),
             limit: limit,
         });
-        const [{ total }] = await database_1.db
-            .select({ total: (0, drizzle_orm_1.count)() })
-            .from(index_1.kaosKakiStok)
-            .where((0, drizzle_orm_1.eq)(index_1.kaosKakiStok.isDeleted, false));
+        const [{ total }] = await db
+            .select({ total: count() })
+            .from(kaosKakiStok)
+            .where(eq(kaosKakiStok.isDeleted, false));
         const totalPages = Math.ceil(total / limit);
         if (result.length === 0) {
             return res.status(200).json({
@@ -76,15 +73,14 @@ const getStockData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getStockData = getStockData;
-const getStockDetails = async (req, res, next) => {
+export const getStockDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid Stock", 400);
+            throw new AppError("Invalid Stock", 400);
         }
-        const result = await database_1.db.query.kaosKakiStok.findFirst({
-            where: (0, drizzle_orm_1.eq)(index_1.kaosKakiStok.id, id),
+        const result = await db.query.kaosKakiStok.findFirst({
+            where: eq(kaosKakiStok.id, id),
             columns: {
                 id: true,
                 stok: true,
@@ -123,7 +119,7 @@ const getStockDetails = async (req, res, next) => {
             },
         });
         if (!result) {
-            throw new error_types_1.AppError("Invalid Stock Data Not Found", 404);
+            throw new AppError("Invalid Stock Data Not Found", 404);
         }
         res.status(200).json({
             success: true,
@@ -137,8 +133,7 @@ const getStockDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getStockDetails = getStockDetails;
-const FormDataStokKaosKaki = async (req, res, next) => {
+export const FormDataStokKaosKaki = async (req, res, next) => {
     try {
         const search = req.query.search;
         const page = parseInt(req.query.page) || 1;
@@ -146,19 +141,19 @@ const FormDataStokKaosKaki = async (req, res, next) => {
         const offset = (page - 1) * limit;
         let whereCondition = undefined;
         if (search) {
-            whereCondition = (0, drizzle_orm_1.like)(index_1.kaosKaki.nama, `%${search}%`);
+            whereCondition = like(kaosKaki.nama, `%${search}%`);
         }
-        const [totalResult] = await database_1.db
-            .select({ count: (0, drizzle_orm_1.count)() })
-            .from(index_1.kaosKaki)
+        const [totalResult] = await db
+            .select({ count: count() })
+            .from(kaosKaki)
             .where(whereCondition);
-        const result = await database_1.db
-            .select({ id: index_1.kaosKaki.id, nama: index_1.kaosKaki.nama })
-            .from(index_1.kaosKaki)
+        const result = await db
+            .select({ id: kaosKaki.id, nama: kaosKaki.nama })
+            .from(kaosKaki)
             .where(whereCondition)
             .limit(limit)
             .offset(offset);
-        const dropDown = await database_1.db.query.kaosKakiDetailVariasi.findMany({
+        const dropDown = await db.query.kaosKakiDetailVariasi.findMany({
             with: {
                 jenisUkuran: {
                     columns: {
@@ -173,7 +168,7 @@ const FormDataStokKaosKaki = async (req, res, next) => {
                     },
                 },
             },
-            where: (0, drizzle_orm_1.inArray)(index_1.kaosKakiDetailVariasi.kaosKakiId, result.map((r) => r.id)),
+            where: inArray(kaosKakiDetailVariasi.kaosKakiId, result.map((r) => r.id)),
         });
         res.status(200).json({
             success: true,
@@ -194,16 +189,15 @@ const FormDataStokKaosKaki = async (req, res, next) => {
         next(error);
     }
 };
-exports.FormDataStokKaosKaki = FormDataStokKaosKaki;
-const newStockData = async (req, res, next) => {
+export const newStockData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload) {
-            throw new error_types_1.AppError("Invalid Input", 400);
+            throw new AppError("Invalid Input", 400);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const [newStock] = await tx
-                .insert(index_1.kaosKakiStok)
+                .insert(kaosKakiStok)
                 .values({
                 idKaos: payload.variasi.kodeKaos,
                 idUkuran: payload.variasi.kodeUkuran,
@@ -211,13 +205,13 @@ const newStockData = async (req, res, next) => {
                 stok: payload.stockAmmount,
             })
                 .returning({
-                idKaos: index_1.kaosKakiStok.idKaos,
+                idKaos: kaosKakiStok.idKaos,
             });
             if (newStock.idKaos) {
                 const result = await tx
-                    .select({ nama: index_1.kaosKaki.nama })
-                    .from(index_1.kaosKaki)
-                    .where((0, drizzle_orm_1.eq)(index_1.kaosKaki.id, newStock.idKaos));
+                    .select({ nama: kaosKaki.nama })
+                    .from(kaosKaki)
+                    .where(eq(kaosKaki.id, newStock.idKaos));
                 res.status(201).json({
                     success: true,
                     message: "New Stock data created successfully",
@@ -235,13 +229,12 @@ const newStockData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newStockData = newStockData;
-const updateStockData = async (req, res, next) => {
+export const updateStockData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (payload.variasi) {
-            const checkStockData = await database_1.db.query.kaosKakiStok.findFirst({
-                where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idUkuran, payload.variasi?.kodeUkuran), (0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idKaos, payload.variasi?.kodeKaos), (0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idWarna, payload.variasi?.kodeWarna)),
+            const checkStockData = await db.query.kaosKakiStok.findFirst({
+                where: and(eq(kaosKakiStok.idUkuran, payload.variasi?.kodeUkuran), eq(kaosKakiStok.idKaos, payload.variasi?.kodeKaos), eq(kaosKakiStok.idWarna, payload.variasi?.kodeWarna)),
                 columns: {
                     id: true,
                     stok: true,
@@ -252,7 +245,7 @@ const updateStockData = async (req, res, next) => {
                 },
             });
             if (checkStockData) {
-                await database_1.db.transaction(async (tx) => {
+                await db.transaction(async (tx) => {
                     const updateData = {
                         updatedAt: new Date().toISOString(),
                     };
@@ -263,11 +256,11 @@ const updateStockData = async (req, res, next) => {
                         updateData.stok = payload.stockAmmount;
                     }
                     if (payload.variasi) {
-                        const [updatedStockData] = await database_1.db
-                            .update(index_1.kaosKakiStok)
+                        const [updatedStockData] = await db
+                            .update(kaosKakiStok)
                             .set(updateData)
-                            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idUkuran, payload.variasi?.kodeUkuran), (0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idKaos, payload.variasi?.kodeKaos), (0, drizzle_orm_1.eq)(index_1.kaosKakiStok.idWarna, payload.variasi?.kodeWarna)))
-                            .returning({ nama: index_1.kaosKakiStok.stok });
+                            .where(and(eq(kaosKakiStok.idUkuran, payload.variasi?.kodeUkuran), eq(kaosKakiStok.idKaos, payload.variasi?.kodeKaos), eq(kaosKakiStok.idWarna, payload.variasi?.kodeWarna)))
+                            .returning({ nama: kaosKakiStok.stok });
                         res.status(200).json({
                             success: true,
                             message: `Order data updated successfully to ${updatedStockData.nama}`,
@@ -275,37 +268,36 @@ const updateStockData = async (req, res, next) => {
                     }
                 });
             }
-            throw new error_types_1.AppError("Stock data not found", 404);
+            throw new AppError("Stock data not found", 404);
         }
-        throw new error_types_1.AppError("ID and at least one field update are required", 400);
+        throw new AppError("ID and at least one field update are required", 400);
     }
     catch (error) {
         next(error);
     }
 };
-exports.updateStockData = updateStockData;
-const deleteStockData = async (req, res, next) => {
+export const deleteStockData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || payload.id === undefined || payload.userId === undefined) {
-            throw new error_types_1.AppError("Error During Delete", 404);
+            throw new AppError("Error During Delete", 404);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const checkDuplicate = await tx
-                .select({ id: index_1.kaosKakiStok.id })
-                .from(index_1.kaosKakiStok)
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKakiStok.id, payload.id))
+                .select({ id: kaosKakiStok.id })
+                .from(kaosKakiStok)
+                .where(eq(kaosKakiStok.id, payload.id))
                 .limit(1);
             if (checkDuplicate.length > 0) {
-                throw new error_types_1.AppError("Data Doesnt exist", 404);
+                throw new AppError("Data Doesnt exist", 404);
             }
             await tx
-                .update(index_1.kaosKakiStok)
+                .update(kaosKakiStok)
                 .set({
                 isDeleted: true,
                 deletedAt: new Date().toISOString(),
             })
-                .where((0, drizzle_orm_1.eq)(index_1.kaosKakiStok.id, payload.id));
+                .where(eq(kaosKakiStok.id, payload.id));
             res.status(201).json({
                 success: true,
                 message: "Stock data deleted successfully",
@@ -316,5 +308,3 @@ const deleteStockData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteStockData = deleteStockData;
-//# sourceMappingURL=stock.transaction.controller.js.map

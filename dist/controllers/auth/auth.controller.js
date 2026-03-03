@@ -1,18 +1,12 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignOut = exports.SignIn = exports.SignUp = void 0;
-const database_1 = require("../../config/database");
-const env_1 = require("../../config/env");
-const schema_1 = require("../../models/schema");
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const drizzle_orm_1 = require("drizzle-orm");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const error_types_1 = require("../../types/middleware/error.types");
+import { db } from "../../config/database.js";
+import { JWT_EXPIRES_IN, JWT_SECRET } from "../../config/env.js";
+import { users } from "../../models/schema.js";
+import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
+import jwt from "jsonwebtoken";
+import { AppError } from "../../types/middleware/error.types.js";
 // Sign Up - Controller
-const SignUp = async (req, res, next) => {
+export const SignUp = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload ||
@@ -20,33 +14,33 @@ const SignUp = async (req, res, next) => {
             !payload.email ||
             !payload.password ||
             !payload.telephone_number) {
-            throw new error_types_1.AppError("All fields are required", 400);
+            throw new AppError("All fields are required", 400);
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(payload.email)) {
-            throw new error_types_1.AppError("Invalid email format", 400);
+            throw new AppError("Invalid email format", 400);
         }
         if (payload.password.length < 8) {
-            throw new error_types_1.AppError("Password must be at least 8 characters", 400);
+            throw new AppError("Password must be at least 8 characters", 400);
         }
         const phoneRegex = /^\+?[1-9]\d{1,14}$/; // More strict international phone regex
         if (!phoneRegex.test(payload.telephone_number)) {
-            throw new error_types_1.AppError("Invalid phone number format", 400);
+            throw new AppError("Invalid phone number format", 400);
         }
         // Check existing email user
-        const [existingUser] = await database_1.db
-            .select({ email: schema_1.users.email })
-            .from(schema_1.users)
-            .where((0, drizzle_orm_1.eq)(schema_1.users.email, payload.email))
+        const [existingUser] = await db
+            .select({ email: users.email })
+            .from(users)
+            .where(eq(users.email, payload.email))
             .limit(1);
         if (existingUser) {
-            throw new error_types_1.AppError("Email already registered", 409);
+            throw new AppError("Email already registered", 409);
         }
         // Hash password
-        const salt = await bcryptjs_1.default.genSalt(10);
-        const hashedPassword = await bcryptjs_1.default.hash(payload.password, salt);
-        const [newUser] = await database_1.db
-            .insert(schema_1.users)
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(payload.password, salt);
+        const [newUser] = await db
+            .insert(users)
             .values({
             namaUser: payload.name.trim(),
             email: payload.email.toLowerCase().trim(),
@@ -57,20 +51,20 @@ const SignUp = async (req, res, next) => {
             updatedAt: new Date().toISOString(),
         })
             .returning({
-            id: schema_1.users.id,
-            namaUser: schema_1.users.namaUser,
-            email: schema_1.users.email,
-            telephoneNumber: schema_1.users.telephoneNumber,
-            role: schema_1.users.role,
+            id: users.id,
+            namaUser: users.namaUser,
+            email: users.email,
+            telephoneNumber: users.telephoneNumber,
+            role: users.role,
         });
         const signOptions = {
-            expiresIn: Number(env_1.JWT_EXPIRES_IN) || 24,
+            expiresIn: Number(JWT_EXPIRES_IN) || 24,
         };
-        const token = jsonwebtoken_1.default.sign({
+        const token = jwt.sign({
             id: newUser.id,
             email: newUser.email,
             role: newUser.role,
-        }, env_1.JWT_SECRET, signOptions);
+        }, JWT_SECRET, signOptions);
         res.status(201).json({
             success: true,
             message: "User registered successfully",
@@ -88,40 +82,39 @@ const SignUp = async (req, res, next) => {
         next(error);
     }
 };
-exports.SignUp = SignUp;
 // Sign In - Controller
-const SignIn = async (req, res, next) => {
+export const SignIn = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.email || !payload.password) {
-            throw new error_types_1.AppError("Email and password are required", 400);
+            throw new AppError("Email and password are required", 400);
         }
-        const [userLogged] = await database_1.db
+        const [userLogged] = await db
             .select({
-            id: schema_1.users.id,
-            name: schema_1.users.namaUser,
-            email: schema_1.users.email,
-            password: schema_1.users.password,
-            role: schema_1.users.role,
+            id: users.id,
+            name: users.namaUser,
+            email: users.email,
+            password: users.password,
+            role: users.role,
         })
-            .from(schema_1.users)
-            .where((0, drizzle_orm_1.eq)(schema_1.users.email, payload.email))
+            .from(users)
+            .where(eq(users.email, payload.email))
             .limit(1);
         if (!userLogged) {
-            throw new error_types_1.AppError("Invalid email or password", 400);
+            throw new AppError("Invalid email or password", 400);
         }
-        const isPasswordValid = await bcryptjs_1.default.compare(payload.password, userLogged.password);
+        const isPasswordValid = await bcrypt.compare(payload.password, userLogged.password);
         if (!isPasswordValid) {
-            throw new error_types_1.AppError("Invalid email or password", 400);
+            throw new AppError("Invalid email or password", 400);
         }
         const signOptions = {
-            expiresIn: Number(env_1.JWT_EXPIRES_IN) || 900,
+            expiresIn: Number(JWT_EXPIRES_IN) || 900,
         };
-        const token = jsonwebtoken_1.default.sign({
+        const token = jwt.sign({
             id: userLogged.id,
             email: userLogged.email,
             role: userLogged.role,
-        }, env_1.JWT_SECRET, signOptions);
+        }, JWT_SECRET, signOptions);
         res.status(200).json({
             success: true,
             message: "User signed in successfully",
@@ -139,9 +132,8 @@ const SignIn = async (req, res, next) => {
         next(error);
     }
 };
-exports.SignIn = SignIn;
 // Sign Out
-const SignOut = async (req, res, next) => {
+export const SignOut = async (req, res, next) => {
     try {
         res
             .status(200)
@@ -151,5 +143,3 @@ const SignOut = async (req, res, next) => {
         next(error);
     }
 };
-exports.SignOut = SignOut;
-//# sourceMappingURL=auth.controller.js.map

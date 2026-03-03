@@ -1,26 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMachineDataPermanent = exports.deleteMachineData = exports.updateMachineData = exports.newMachineData = exports.getMachineDetails = exports.getMachineData = void 0;
-const database_1 = require("../../config/database");
-const schema_1 = require("../../models/schema");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getMachineData = async (req, res, next) => {
+import { db } from "../../config/database.js";
+import { jenisMesin } from "../../models/schema.js";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getMachineData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const rows = await database_1.db
+        const rows = await db
             .select({
-            nama: schema_1.jenisMesin.nama,
-            kode: schema_1.jenisMesin.kodeMesin,
+            nama: jenisMesin.nama,
+            kode: jenisMesin.kodeMesin,
         })
-            .from(schema_1.jenisMesin)
-            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.jenisMesin.isDeleted, false), (0, drizzle_orm_1.isNull)(schema_1.jenisMesin.deletedAt)))
-            .orderBy((0, drizzle_orm_1.asc)(schema_1.jenisMesin.nama))
+            .from(jenisMesin)
+            .where(and(eq(jenisMesin.isDeleted, false), isNull(jenisMesin.deletedAt)))
+            .orderBy(asc(jenisMesin.nama))
             .limit(limit)
             .offset(offset);
-        const [{ total }] = await database_1.db.select({ total: (0, drizzle_orm_1.count)() }).from(schema_1.jenisMesin);
+        const [{ total }] = await db.select({ total: count() }).from(jenisMesin);
         const totalPages = Math.ceil(total / limit);
         if (rows.length === 0) {
             return res.status(200).json({
@@ -56,25 +53,24 @@ const getMachineData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getMachineData = getMachineData;
-const getMachineDetails = async (req, res, next) => {
+export const getMachineDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid machine ID", 400);
+            throw new AppError("Invalid machine ID", 400);
         }
-        const [detailMasterData] = await database_1.db
+        const [detailMasterData] = await db
             .select({
-            nama: schema_1.jenisMesin.nama,
-            kode: schema_1.jenisMesin.kodeMesin,
-            createdAt: schema_1.jenisMesin.createdAt,
-            updatedAt: schema_1.jenisMesin.updatedAt,
+            nama: jenisMesin.nama,
+            kode: jenisMesin.kodeMesin,
+            createdAt: jenisMesin.createdAt,
+            updatedAt: jenisMesin.updatedAt,
         })
-            .from(schema_1.jenisMesin)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisMesin.id, id))
+            .from(jenisMesin)
+            .where(eq(jenisMesin.id, id))
             .limit(1);
         if (!detailMasterData) {
-            throw new error_types_1.AppError("Machine not found", 404);
+            throw new AppError("Machine not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -88,15 +84,14 @@ const getMachineDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getMachineDetails = getMachineDetails;
-const newMachineData = async (req, res, next) => {
+export const newMachineData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.nama || !payload.kode_mesin) {
-            throw new error_types_1.AppError("All fields are required", 400);
+            throw new AppError("All fields are required", 400);
         }
-        const [newMasterData] = await database_1.db
-            .insert(schema_1.jenisMesin)
+        const [newMasterData] = await db
+            .insert(jenisMesin)
             .values({
             nama: payload.nama.trim(),
             kodeMesin: payload.kode_mesin.trim(),
@@ -107,7 +102,7 @@ const newMachineData = async (req, res, next) => {
             deletedAt: null,
         })
             .returning({
-            nama: schema_1.jenisMesin.nama,
+            nama: jenisMesin.nama,
         });
         res.status(201).json({
             success: true,
@@ -123,14 +118,13 @@ const newMachineData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newMachineData = newMachineData;
-const updateMachineData = async (req, res, next) => {
+export const updateMachineData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload ||
             !payload.id ||
             (!payload.nama && !payload.kode_mesin && payload.status === undefined)) {
-            throw new error_types_1.AppError("ID and at least one field to update are required", 400);
+            throw new AppError("ID and at least one field to update are required", 400);
         }
         const updateData = {
             updatedAt: new Date().toISOString(),
@@ -148,15 +142,15 @@ const updateMachineData = async (req, res, next) => {
             updateData.isDeleted = payload.isDeleted;
             updateData.deletedAt = new Date().toISOString();
         }
-        const [updatedMasterData] = await database_1.db
-            .update(schema_1.jenisMesin)
+        const [updatedMasterData] = await db
+            .update(jenisMesin)
             .set(updateData)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisMesin.id, payload.id))
+            .where(eq(jenisMesin.id, payload.id))
             .returning({
-            nama: schema_1.jenisMesin.nama,
+            nama: jenisMesin.nama,
         });
         if (!updatedMasterData) {
-            throw new error_types_1.AppError("Machine not found", 404);
+            throw new AppError("Machine not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -172,30 +166,29 @@ const updateMachineData = async (req, res, next) => {
         next(error);
     }
 };
-exports.updateMachineData = updateMachineData;
 // Soft delete
-const deleteMachineData = async (req, res, next) => {
+export const deleteMachineData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Machine ID is Not Valid", 400);
+            throw new AppError("Machine ID is Not Valid", 400);
         }
         if (isNaN(payload.id)) {
-            throw new error_types_1.AppError("Machine ID is Not Valid", 400);
+            throw new AppError("Machine ID is Not Valid", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .update(schema_1.jenisMesin)
+        const [deletedMasterData] = await db
+            .update(jenisMesin)
             .set({
             status: 0,
             isDeleted: true,
             deletedAt: new Date().toISOString(),
         })
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisMesin.id, payload.id))
+            .where(eq(jenisMesin.id, payload.id))
             .returning({
-            nama: schema_1.jenisMesin.nama,
+            nama: jenisMesin.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Machine not found", 404);
+            throw new AppError("Machine not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -211,22 +204,21 @@ const deleteMachineData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteMachineData = deleteMachineData;
 // Permanent delete
-const deleteMachineDataPermanent = async (req, res, next) => {
+export const deleteMachineDataPermanent = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Machine ID is required", 400);
+            throw new AppError("Machine ID is required", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .delete(schema_1.jenisMesin)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisMesin.id, payload.id))
+        const [deletedMasterData] = await db
+            .delete(jenisMesin)
+            .where(eq(jenisMesin.id, payload.id))
             .returning({
-            nama: schema_1.jenisMesin.nama,
+            nama: jenisMesin.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Machine not found", 404);
+            throw new AppError("Machine not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -242,5 +234,3 @@ const deleteMachineDataPermanent = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteMachineDataPermanent = deleteMachineDataPermanent;
-//# sourceMappingURL=master.machine.controller.js.map

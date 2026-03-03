@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 // Status enums umum
 const STATUS = {
     ACTIVE: 1,
@@ -14,4 +12,4 @@ const RECORDSTATUS = {
     REJECTED: "rejected",
     ARCHIVED: "archived",
 };
-//# sourceMappingURL=base.master.types.js.map
+export {};

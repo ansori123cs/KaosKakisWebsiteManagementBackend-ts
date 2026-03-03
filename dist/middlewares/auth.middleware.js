@@ -1,15 +1,9 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.authorizeRole = exports.authorize = void 0;
-const database_1 = require("../config/database");
-const env_1 = require("../config/env");
-const schema_1 = require("../models/schema");
-const drizzle_orm_1 = require("drizzle-orm");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const authorize = async (req, res, next) => {
+import { db } from "../config/database.js";
+import { JWT_SECRET, NODE_ENV } from "../config/env.js";
+import { users } from "../models/schema.js";
+import { eq } from "drizzle-orm";
+import jwt from "jsonwebtoken";
+export const authorize = async (req, res, next) => {
     try {
         let token;
         //take token from requsest headers
@@ -26,16 +20,16 @@ const authorize = async (req, res, next) => {
                 .status(401)
                 .json({ succeess: false, message: "Unauthorized : token not found" });
         //verify token then take data login user
-        const decoded = jsonwebtoken_1.default.verify(token, env_1.JWT_SECRET);
-        const [user] = await database_1.db
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const [user] = await db
             .select({
-            id: schema_1.users.id,
-            namaUser: schema_1.users.namaUser,
-            email: schema_1.users.email,
-            role: schema_1.users.role,
+            id: users.id,
+            namaUser: users.namaUser,
+            email: users.email,
+            role: users.role,
         })
-            .from(schema_1.users)
-            .where((0, drizzle_orm_1.eq)(schema_1.users.id, decoded.id))
+            .from(users)
+            .where(eq(users.id, decoded.id))
             .limit(1);
         if (!user)
             return res.status(401).json({
@@ -46,10 +40,10 @@ const authorize = async (req, res, next) => {
         next();
     }
     catch (error) {
-        if (env_1.NODE_ENV === "development") {
+        if (NODE_ENV === "development") {
             console.log("authorize middleware error ", error);
         }
-        if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
+        if (error instanceof jwt.JsonWebTokenError) {
             return res
                 .status(401)
                 .json({ succeess: false, message: "Unauthorize : Token Invalid" });
@@ -59,8 +53,7 @@ const authorize = async (req, res, next) => {
             .json({ success: false, message: "Internal Server Error" });
     }
 };
-exports.authorize = authorize;
-const authorizeRole = (...roles) => {
+export const authorizeRole = (...roles) => {
     return (req, res, next) => {
         if (!req.user) {
             return res
@@ -76,5 +69,3 @@ const authorizeRole = (...roles) => {
         next();
     };
 };
-exports.authorizeRole = authorizeRole;
-//# sourceMappingURL=auth.middleware.js.map

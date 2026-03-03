@@ -1,9 +1,9 @@
-import { authorize } from "../../middlewares/auth.middleware";
+import { authorize } from "../../middlewares/auth.middleware.js";
 import {
   SignIn,
   SignOut,
   SignUp,
-} from "../../controllers/auth/auth.controller";
+} from "../../controllers/auth/auth.controller.js";
 import { Router } from "express";
 
 const authRouter = Router();

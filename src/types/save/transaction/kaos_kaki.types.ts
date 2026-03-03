@@ -1,6 +1,6 @@
-import { AuditableEntity, Status } from "../master/base.master.types";
-import { Machine } from "../master/machine.types";
-import { Material } from "../master/material.types";
+import { AuditableEntity, Status } from "../master/base.master.types.js";
+import { Machine } from "../master/machine.types.js";
+import { Material } from "../master/material.types.js";
 
 export interface KaosKaki extends AuditableEntity {
   nama: string;

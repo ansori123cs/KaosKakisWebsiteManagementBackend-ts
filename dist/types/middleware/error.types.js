@@ -1,8 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.DatabaseError = exports.ValidationError = exports.AppError = void 0;
 // src/types/error.types.ts
-class AppError extends Error {
+export class AppError extends Error {
+    statusCode;
+    status;
+    isOperational;
+    errors;
     constructor(message, statusCode, errors) {
         super(message);
         this.statusCode = statusCode;
@@ -34,19 +35,15 @@ class AppError extends Error {
         return new AppError(message, 500);
     }
 }
-exports.AppError = AppError;
-class ValidationError extends AppError {
+export class ValidationError extends AppError {
     constructor(message = "Validation Error", errors) {
         super(message, 400, errors);
         this.name = "ValidationError";
     }
 }
-exports.ValidationError = ValidationError;
-class DatabaseError extends AppError {
+export class DatabaseError extends AppError {
     constructor(message = "Database Error") {
         super(message, 500);
         this.name = "DatabaseError";
     }
 }
-exports.DatabaseError = DatabaseError;
-//# sourceMappingURL=error.types.js.map

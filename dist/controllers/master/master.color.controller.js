@@ -1,26 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteColorDataPermanent = exports.deleteColorData = exports.updateColorData = exports.newColorData = exports.getColorDetails = exports.getColorData = void 0;
-const database_1 = require("../../config/database");
-const schema_1 = require("../../models/schema");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getColorData = async (req, res, next) => {
+import { db } from "../../config/database.js";
+import { jenisWarna } from "../../models/schema.js";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getColorData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const rows = await database_1.db
+        const rows = await db
             .select({
-            nama: schema_1.jenisWarna.nama,
-            kode: schema_1.jenisWarna.kodeWarna,
+            nama: jenisWarna.nama,
+            kode: jenisWarna.kodeWarna,
         })
-            .from(schema_1.jenisWarna)
-            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.jenisWarna.isDeleted, false), (0, drizzle_orm_1.isNull)(schema_1.jenisWarna.deletedAt)))
-            .orderBy((0, drizzle_orm_1.asc)(schema_1.jenisWarna.nama))
+            .from(jenisWarna)
+            .where(and(eq(jenisWarna.isDeleted, false), isNull(jenisWarna.deletedAt)))
+            .orderBy(asc(jenisWarna.nama))
             .limit(limit)
             .offset(offset);
-        const [{ total }] = await database_1.db.select({ total: (0, drizzle_orm_1.count)() }).from(schema_1.jenisWarna);
+        const [{ total }] = await db.select({ total: count() }).from(jenisWarna);
         const totalPages = Math.ceil(total / limit);
         if (rows.length === 0) {
             return res.status(200).json({
@@ -56,25 +53,24 @@ const getColorData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getColorData = getColorData;
-const getColorDetails = async (req, res, next) => {
+export const getColorDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid color ID", 400);
+            throw new AppError("Invalid color ID", 400);
         }
-        const [detailMasterData] = await database_1.db
+        const [detailMasterData] = await db
             .select({
-            nama: schema_1.jenisWarna.nama,
-            kode: schema_1.jenisWarna.kodeWarna,
-            createdAt: schema_1.jenisWarna.createdAt,
-            updatedAt: schema_1.jenisWarna.updatedAt,
+            nama: jenisWarna.nama,
+            kode: jenisWarna.kodeWarna,
+            createdAt: jenisWarna.createdAt,
+            updatedAt: jenisWarna.updatedAt,
         })
-            .from(schema_1.jenisWarna)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisWarna.id, id))
+            .from(jenisWarna)
+            .where(eq(jenisWarna.id, id))
             .limit(1);
         if (!detailMasterData) {
-            throw new error_types_1.AppError("Color not found", 404);
+            throw new AppError("Color not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -88,15 +84,14 @@ const getColorDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getColorDetails = getColorDetails;
-const newColorData = async (req, res, next) => {
+export const newColorData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.nama || !payload.kode_warna) {
-            throw new error_types_1.AppError("All fields are required", 400);
+            throw new AppError("All fields are required", 400);
         }
-        const [newMasterData] = await database_1.db
-            .insert(schema_1.jenisWarna)
+        const [newMasterData] = await db
+            .insert(jenisWarna)
             .values({
             nama: payload.nama.trim(),
             kodeWarna: payload.kode_warna.trim(),
@@ -107,7 +102,7 @@ const newColorData = async (req, res, next) => {
             deletedAt: null,
         })
             .returning({
-            nama: schema_1.jenisWarna.nama,
+            nama: jenisWarna.nama,
         });
         res.status(201).json({
             success: true,
@@ -123,14 +118,13 @@ const newColorData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newColorData = newColorData;
-const updateColorData = async (req, res, next) => {
+export const updateColorData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload ||
             !payload.id ||
             (!payload.nama && !payload.kode_warna && payload.status === undefined)) {
-            throw new error_types_1.AppError("ID and at least one field to update are required", 400);
+            throw new AppError("ID and at least one field to update are required", 400);
         }
         const updateData = {
             updatedAt: new Date().toISOString(),
@@ -148,15 +142,15 @@ const updateColorData = async (req, res, next) => {
             updateData.isDeleted = payload.isDeleted;
             updateData.deletedAt = new Date().toISOString();
         }
-        const [updatedMasterData] = await database_1.db
-            .update(schema_1.jenisWarna)
+        const [updatedMasterData] = await db
+            .update(jenisWarna)
             .set(updateData)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisWarna.id, payload.id))
+            .where(eq(jenisWarna.id, payload.id))
             .returning({
-            nama: schema_1.jenisWarna.nama,
+            nama: jenisWarna.nama,
         });
         if (!updatedMasterData) {
-            throw new error_types_1.AppError("Color not found", 404);
+            throw new AppError("Color not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -172,30 +166,29 @@ const updateColorData = async (req, res, next) => {
         next(error);
     }
 };
-exports.updateColorData = updateColorData;
 // Soft delete
-const deleteColorData = async (req, res, next) => {
+export const deleteColorData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Color ID is Not Valid", 400);
+            throw new AppError("Color ID is Not Valid", 400);
         }
         if (isNaN(payload.id)) {
-            throw new error_types_1.AppError("Color ID is Not Valid", 400);
+            throw new AppError("Color ID is Not Valid", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .update(schema_1.jenisWarna)
+        const [deletedMasterData] = await db
+            .update(jenisWarna)
             .set({
             status: 0,
             isDeleted: true,
             deletedAt: new Date().toISOString(),
         })
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisWarna.id, payload.id))
+            .where(eq(jenisWarna.id, payload.id))
             .returning({
-            nama: schema_1.jenisWarna.nama,
+            nama: jenisWarna.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Color not found", 404);
+            throw new AppError("Color not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -211,22 +204,21 @@ const deleteColorData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteColorData = deleteColorData;
 // Permanent delete
-const deleteColorDataPermanent = async (req, res, next) => {
+export const deleteColorDataPermanent = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Color ID is required", 400);
+            throw new AppError("Color ID is required", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .delete(schema_1.jenisWarna)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisWarna.id, payload.id))
+        const [deletedMasterData] = await db
+            .delete(jenisWarna)
+            .where(eq(jenisWarna.id, payload.id))
             .returning({
-            nama: schema_1.jenisWarna.nama,
+            nama: jenisWarna.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Color not found", 404);
+            throw new AppError("Color not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -242,5 +234,3 @@ const deleteColorDataPermanent = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteColorDataPermanent = deleteColorDataPermanent;
-//# sourceMappingURL=master.color.controller.js.map

@@ -1,16 +1,13 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteOrderData = exports.updateOrderData = exports.newOrderData = exports.FormDataOrderDetailKaosKaki = exports.FormDataOrderKaosKaki = exports.getOrderDetails = exports.getOrderData = void 0;
-const index_1 = require("../../models/index");
-const database_1 = require("../../config/database");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getOrderData = async (req, res, next) => {
+import { kaosKaki, pesanan, pesananDetail, } from "../../models/index.js";
+import { db } from "../../config/database.js";
+import { eq, count, and, like } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getOrderData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const result = await database_1.db.query.pesanan.findMany({
+        const result = await db.query.pesanan.findMany({
             columns: {
                 id: true,
                 namaPemesan: true,
@@ -50,10 +47,10 @@ const getOrderData = async (req, res, next) => {
             where: (pesanan, { eq }) => eq(pesanan.isDeleted, false),
             limit: limit,
         });
-        const [{ total }] = await database_1.db
-            .select({ total: (0, drizzle_orm_1.count)() })
-            .from(index_1.pesanan)
-            .where((0, drizzle_orm_1.eq)(index_1.pesanan.isDeleted, false));
+        const [{ total }] = await db
+            .select({ total: count() })
+            .from(pesanan)
+            .where(eq(pesanan.isDeleted, false));
         const totalPages = Math.ceil(total / limit);
         if (result.length === 0) {
             return res.status(200).json({
@@ -89,15 +86,14 @@ const getOrderData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getOrderData = getOrderData;
-const getOrderDetails = async (req, res, next) => {
+export const getOrderDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid Order", 400);
+            throw new AppError("Invalid Order", 400);
         }
-        const result = await database_1.db.query.pesanan.findFirst({
-            where: (0, drizzle_orm_1.eq)(index_1.pesanan.id, id),
+        const result = await db.query.pesanan.findFirst({
+            where: eq(pesanan.id, id),
             with: {
                 pesananDetails: {
                     columns: {
@@ -158,7 +154,7 @@ const getOrderDetails = async (req, res, next) => {
             },
         });
         if (!result) {
-            throw new error_types_1.AppError("Invalid Order Data Not Found", 404);
+            throw new AppError("Invalid Order Data Not Found", 404);
         }
         res.status(200).json({
             success: true,
@@ -172,8 +168,7 @@ const getOrderDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getOrderDetails = getOrderDetails;
-const FormDataOrderKaosKaki = async (req, res, next) => {
+export const FormDataOrderKaosKaki = async (req, res, next) => {
     try {
         const search = req.query.search;
         const page = parseInt(req.query.page) || 1;
@@ -181,15 +176,15 @@ const FormDataOrderKaosKaki = async (req, res, next) => {
         const offset = (page - 1) * limit;
         let whereCondition = undefined;
         if (search) {
-            whereCondition = (0, drizzle_orm_1.like)(index_1.kaosKaki.nama, `%${search}%`);
+            whereCondition = like(kaosKaki.nama, `%${search}%`);
         }
-        const [totalResult] = await database_1.db
-            .select({ count: (0, drizzle_orm_1.count)() })
-            .from(index_1.kaosKaki)
+        const [totalResult] = await db
+            .select({ count: count() })
+            .from(kaosKaki)
             .where(whereCondition);
-        const result = await database_1.db
-            .select({ id: index_1.kaosKaki.id, nama: index_1.kaosKaki.nama })
-            .from(index_1.kaosKaki)
+        const result = await db
+            .select({ id: kaosKaki.id, nama: kaosKaki.nama })
+            .from(kaosKaki)
             .where(whereCondition)
             .limit(limit)
             .offset(offset);
@@ -211,15 +206,14 @@ const FormDataOrderKaosKaki = async (req, res, next) => {
         next(error);
     }
 };
-exports.FormDataOrderKaosKaki = FormDataOrderKaosKaki;
-const FormDataOrderDetailKaosKaki = async (req, res, next) => {
+export const FormDataOrderDetailKaosKaki = async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid Kaos Kaki", 400);
+            throw new AppError("Invalid Kaos Kaki", 400);
         }
-        const result = await database_1.db.query.kaosKaki.findMany({
-            where: (0, drizzle_orm_1.eq)(index_1.kaosKaki.id, id),
+        const result = await db.query.kaosKaki.findMany({
+            where: eq(kaosKaki.id, id),
             limit: 1,
             columns: {
                 id: true,
@@ -258,40 +252,39 @@ const FormDataOrderDetailKaosKaki = async (req, res, next) => {
         next(error);
     }
 };
-exports.FormDataOrderDetailKaosKaki = FormDataOrderDetailKaosKaki;
-const newOrderData = async (req, res, next) => {
+export const newOrderData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload ||
             !payload.createdAt ||
             !payload.namaPemesan ||
             !payload.orderDetails?.length) {
-            throw new error_types_1.AppError("Invalid Input - namaPemesan, createdAt, and orderDetails are required", 400);
+            throw new AppError("Invalid Input - namaPemesan, createdAt, and orderDetails are required", 400);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             if (payload.createdAt) {
                 const checkDuplicate = await tx
-                    .select({ id: index_1.pesanan.id })
-                    .from(index_1.pesanan)
-                    .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(index_1.pesanan.namaPemesan, payload.namaPemesan.trim()), (0, drizzle_orm_1.eq)(index_1.pesanan.createdAt, payload.createdAt.toISOString())))
+                    .select({ id: pesanan.id })
+                    .from(pesanan)
+                    .where(and(eq(pesanan.namaPemesan, payload.namaPemesan.trim()), eq(pesanan.createdAt, payload.createdAt.toISOString())))
                     .limit(1);
                 if (checkDuplicate.length > 0) {
-                    throw new error_types_1.AppError("Pesanan dengan nama dan tanggal yang sama ada kemungkinan duplicate order", 400);
+                    throw new AppError("Pesanan dengan nama dan tanggal yang sama ada kemungkinan duplicate order", 400);
                 }
                 const [newOrder] = await tx
-                    .insert(index_1.pesanan)
+                    .insert(pesanan)
                     .values({
                     namaPemesan: payload.namaPemesan.trim(),
                     catatan: payload.catatan.trim(),
                     createdAt: payload.createdAt.toISOString(),
                 })
                     .returning({
-                    id: index_1.pesanan.id,
-                    nama: index_1.pesanan.namaPemesan,
+                    id: pesanan.id,
+                    nama: pesanan.namaPemesan,
                 });
                 if (payload.orderDetails?.length) {
                     for (const variasi of payload.orderDetails) {
-                        await tx.insert(index_1.pesananDetail).values({
+                        await tx.insert(pesananDetail).values({
                             kaosKakiVariasiId: variasi.kodeKaosVariasi,
                             hargaSatuan: variasi.price,
                             jumlah: variasi.amount,
@@ -315,15 +308,14 @@ const newOrderData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newOrderData = newOrderData;
-const updateOrderData = async (req, res, next) => {
+export const updateOrderData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload?.id) {
-            throw new error_types_1.AppError("ID and at least one field update are required", 400);
+            throw new AppError("ID and at least one field update are required", 400);
         }
-        const checkOrderData = await database_1.db.query.pesanan.findFirst({
-            where: (0, drizzle_orm_1.eq)(index_1.pesanan.id, payload.id),
+        const checkOrderData = await db.query.pesanan.findFirst({
+            where: eq(pesanan.id, payload.id),
             columns: {
                 id: true,
                 catatan: true,
@@ -346,9 +338,9 @@ const updateOrderData = async (req, res, next) => {
             },
         });
         if (!checkOrderData) {
-            throw new error_types_1.AppError("Order data not found", 404);
+            throw new AppError("Order data not found", 404);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const updateData = {
                 updatedAt: new Date().toISOString(),
             };
@@ -370,7 +362,7 @@ const updateOrderData = async (req, res, next) => {
                 for (const [index, detail] of payload.orderDetails.entries()) {
                     const isExist = checkOrderData.pesananDetails.some((m) => m?.kaosKakiVariasiId === detail.kodeKaosVariasi);
                     if (!isExist && !detail.isDeleted) {
-                        await tx.insert(index_1.pesananDetail).values({
+                        await tx.insert(pesananDetail).values({
                             pesananId: payload.id,
                             hargaSatuan: payload.orderDetails[index].price,
                             jumlah: payload.orderDetails[index].amount,
@@ -381,17 +373,17 @@ const updateOrderData = async (req, res, next) => {
                     }
                     if (isExist && detail.isDeleted) {
                         await tx
-                            .update(index_1.pesananDetail)
+                            .update(pesananDetail)
                             .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                            .where((0, drizzle_orm_1.eq)(index_1.pesananDetail.id, detail.id));
+                            .where(eq(pesananDetail.id, detail.id));
                     }
                 }
             }
             if (Object.keys(updateData).length > 1) {
                 await tx
-                    .update(index_1.pesanan)
+                    .update(pesanan)
                     .set(updateData)
-                    .where((0, drizzle_orm_1.eq)(index_1.pesanan.id, payload.id));
+                    .where(eq(pesanan.id, payload.id));
             }
         });
         res.status(200).json({
@@ -403,38 +395,37 @@ const updateOrderData = async (req, res, next) => {
         next(error);
     }
 };
-exports.updateOrderData = updateOrderData;
-const deleteOrderData = async (req, res, next) => {
+export const deleteOrderData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || payload.id === undefined || payload.userId === undefined) {
-            throw new error_types_1.AppError("Error During Delete", 404);
+            throw new AppError("Error During Delete", 404);
         }
-        await database_1.db.transaction(async (tx) => {
+        await db.transaction(async (tx) => {
             const checkOrderExists = await tx
-                .select({ id: index_1.pesanan.id })
-                .from(index_1.pesanan)
-                .where((0, drizzle_orm_1.eq)(index_1.pesanan.id, payload.id))
+                .select({ id: pesanan.id })
+                .from(pesanan)
+                .where(eq(pesanan.id, payload.id))
                 .limit(1);
             if (checkOrderExists.length === 0) {
-                throw new error_types_1.AppError("Data Doesn't exist", 404);
+                throw new AppError("Data Doesn't exist", 404);
             }
             const [deletedOrderData] = await tx
-                .update(index_1.pesanan)
+                .update(pesanan)
                 .set({
                 status: 0,
                 isDeleted: true,
                 deletedAt: new Date().toISOString(),
             })
-                .where((0, drizzle_orm_1.eq)(index_1.pesanan.id, payload.id))
+                .where(eq(pesanan.id, payload.id))
                 .returning({
-                id: index_1.pesanan.id,
-                nama: index_1.pesanan.namaPemesan,
+                id: pesanan.id,
+                nama: pesanan.namaPemesan,
             });
             await tx
-                .update(index_1.pesananDetail)
+                .update(pesananDetail)
                 .set({ isDeleted: true, deletedAt: new Date().toISOString() })
-                .where((0, drizzle_orm_1.eq)(index_1.pesananDetail.pesananId, payload.id));
+                .where(eq(pesananDetail.pesananId, payload.id));
             res.status(201).json({
                 success: true,
                 message: "Order data deleted successfully",
@@ -448,5 +439,3 @@ const deleteOrderData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteOrderData = deleteOrderData;
-//# sourceMappingURL=order.transaction.controller.js.map

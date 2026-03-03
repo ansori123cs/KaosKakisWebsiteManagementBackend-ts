@@ -1,13 +1,10 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const auth_middleware_1 = require("../../middlewares/auth.middleware");
-const master_machine_controller_1 = require("../../controllers/master/master.machine.controller");
-const express_1 = require("express");
-const machineRouter = (0, express_1.Router)();
-machineRouter.get("/", auth_middleware_1.authorize, master_machine_controller_1.getMachineData);
-machineRouter.post("/create", auth_middleware_1.authorize, master_machine_controller_1.newMachineData);
-machineRouter.get("/:id", auth_middleware_1.authorize, master_machine_controller_1.getMachineDetails);
-machineRouter.put("/update/:id", auth_middleware_1.authorize, master_machine_controller_1.updateMachineData);
-machineRouter.post("/delete/:id", auth_middleware_1.authorize, master_machine_controller_1.deleteMachineData);
-exports.default = machineRouter;
-//# sourceMappingURL=machine.router.js.map
+import { authorize } from "../../middlewares/auth.middleware.js";
+import { deleteMachineData, getMachineData, getMachineDetails, newMachineData, updateMachineData, } from "../../controllers/master/master.machine.controller.js";
+import { Router } from "express";
+const machineRouter = Router();
+machineRouter.get("/", authorize, getMachineData);
+machineRouter.post("/create", authorize, newMachineData);
+machineRouter.get("/:id", authorize, getMachineDetails);
+machineRouter.put("/update/:id", authorize, updateMachineData);
+machineRouter.post("/delete/:id", authorize, deleteMachineData);
+export default machineRouter;

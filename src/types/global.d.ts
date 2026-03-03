@@ -1,6 +1,6 @@
-export * from "./api/response.types.ts";
-export * from "./api/auth.types.ts";
-export * from "./save/master/user.types.ts";
+export * from "./api/response.types.js";
+export * from "./api/auth.types.js";
+export * from "./save/master/user.types.js";
 
 // Global utility types
 type Nullable<T> = T | null;

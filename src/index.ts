@@ -1,19 +1,19 @@
 import express from "express";
 import createError from "http-errors";
-import { PORT } from "./config/env";
+import { PORT } from "./config/env.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { corsOptions } from "./config/cors";
-import arcjetMiddleware from "./middlewares/arcjet.middleware";
-import errorMiddleware from "./middlewares/error.middleware";
-import authRouter from "./routes/auth/auth.router";
-import machineRouter from "./routes/master/machine.router";
-import colorRouter from "./routes/master/color.router";
-import sizeRouter from "./routes/master/size.router";
-import materialRouter from "./routes/master/material.router";
-import kaosKakiRouter from "./routes/transaction/kaos_kaki.router";
-import orderRouter from "./routes/transaction/order.router";
-import stockRouter from "./routes/transaction/stock.routes";
+import { corsOptions } from "./config/cors.js";
+import arcjetMiddleware from "./middlewares/arcjet.middleware.js";
+import errorMiddleware from "./middlewares/error.middleware.js";
+import authRouter from "./routes/auth/auth.router.js";
+import machineRouter from "./routes/master/machine.router.js";
+import colorRouter from "./routes/master/color.router.js";
+import sizeRouter from "./routes/master/size.router.js";
+import materialRouter from "./routes/master/material.router.js";
+import kaosKakiRouter from "./routes/transaction/kaos_kaki.router.js";
+import orderRouter from "./routes/transaction/order.router.js";
+import stockRouter from "./routes/transaction/stock.routes.js";
 
 const app = express();
 

@@ -1,5 +1,5 @@
 // src/types/express.d.ts
-import { UserSafe } from "./database/schema.types.ts";
+import { UserSafe } from "./database/schema.types.js";
 
 declare global {
   namespace Express {

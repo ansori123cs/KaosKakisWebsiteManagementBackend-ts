@@ -1,4 +1,4 @@
-import { AuditableEntity, Status } from "../master/base.master.types";
+import { AuditableEntity, Status } from "../master/base.master.types.js";
 
 export interface Order extends AuditableEntity {
   namaPemesan: string;

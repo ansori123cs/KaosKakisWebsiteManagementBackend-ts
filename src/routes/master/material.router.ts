@@ -1,4 +1,4 @@
-import { authorize } from "../../middlewares/auth.middleware";
+import { authorize } from "../../middlewares/auth.middleware.js";
 import { Router } from "express";
 import {
   deleteMaterialData,
@@ -6,7 +6,7 @@ import {
   getMaterialDetails,
   newMaterialData,
   updateMaterialData,
-} from "../../controllers/master/master.material.controller";
+} from "../../controllers/master/master.material.controller.js";
 
 const materialRouter = Router();
 

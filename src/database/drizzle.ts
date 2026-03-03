@@ -1,4 +1,4 @@
-import { DB_URI } from "../config/env";
+import { DB_URI } from "../config/env.js";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 

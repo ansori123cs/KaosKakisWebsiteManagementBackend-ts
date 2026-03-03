@@ -1,26 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMaterialDataPermanent = exports.deleteMaterialData = exports.updateMaterialData = exports.newMaterialData = exports.getMaterialDetails = exports.getMaterialData = void 0;
-const database_1 = require("../../config/database");
-const schema_1 = require("../../models/schema");
-const drizzle_orm_1 = require("drizzle-orm");
-const error_types_1 = require("../../types/middleware/error.types");
-const getMaterialData = async (req, res, next) => {
+import { db } from "../../config/database.js";
+import { jenisBahan } from "../../models/schema.js";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { AppError } from "../../types/middleware/error.types.js";
+export const getMaterialData = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const rows = await database_1.db
+        const rows = await db
             .select({
-            nama: schema_1.jenisBahan.nama,
-            kode: schema_1.jenisBahan.kodeBahan,
+            nama: jenisBahan.nama,
+            kode: jenisBahan.kodeBahan,
         })
-            .from(schema_1.jenisBahan)
-            .where((0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema_1.jenisBahan.isDeleted, false), (0, drizzle_orm_1.isNull)(schema_1.jenisBahan.deletedAt)))
-            .orderBy((0, drizzle_orm_1.asc)(schema_1.jenisBahan.nama))
+            .from(jenisBahan)
+            .where(and(eq(jenisBahan.isDeleted, false), isNull(jenisBahan.deletedAt)))
+            .orderBy(asc(jenisBahan.nama))
             .limit(limit)
             .offset(offset);
-        const [{ total }] = await database_1.db.select({ total: (0, drizzle_orm_1.count)() }).from(schema_1.jenisBahan);
+        const [{ total }] = await db.select({ total: count() }).from(jenisBahan);
         const totalPages = Math.ceil(total / limit);
         if (rows.length === 0) {
             return res.status(200).json({
@@ -56,25 +53,24 @@ const getMaterialData = async (req, res, next) => {
         next(error);
     }
 };
-exports.getMaterialData = getMaterialData;
-const getMaterialDetails = async (req, res, next) => {
+export const getMaterialDetails = async (req, res, next) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
-            throw new error_types_1.AppError("Invalid material ID", 400);
+            throw new AppError("Invalid material ID", 400);
         }
-        const [detailMasterData] = await database_1.db
+        const [detailMasterData] = await db
             .select({
-            nama: schema_1.jenisBahan.nama,
-            kode: schema_1.jenisBahan.kodeBahan,
-            createdAt: schema_1.jenisBahan.createdAt,
-            updatedAt: schema_1.jenisBahan.updatedAt,
+            nama: jenisBahan.nama,
+            kode: jenisBahan.kodeBahan,
+            createdAt: jenisBahan.createdAt,
+            updatedAt: jenisBahan.updatedAt,
         })
-            .from(schema_1.jenisBahan)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisBahan.id, id))
+            .from(jenisBahan)
+            .where(eq(jenisBahan.id, id))
             .limit(1);
         if (!detailMasterData) {
-            throw new error_types_1.AppError("Material not found", 404);
+            throw new AppError("Material not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -88,15 +84,14 @@ const getMaterialDetails = async (req, res, next) => {
         next(error);
     }
 };
-exports.getMaterialDetails = getMaterialDetails;
-const newMaterialData = async (req, res, next) => {
+export const newMaterialData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.nama || !payload.kode_bahan) {
-            throw new error_types_1.AppError("All fields are required", 400);
+            throw new AppError("All fields are required", 400);
         }
-        const [newMasterData] = await database_1.db
-            .insert(schema_1.jenisBahan)
+        const [newMasterData] = await db
+            .insert(jenisBahan)
             .values({
             nama: payload.nama.trim(),
             kodeBahan: payload.kode_bahan.trim(),
@@ -107,7 +102,7 @@ const newMaterialData = async (req, res, next) => {
             deletedAt: null,
         })
             .returning({
-            nama: schema_1.jenisBahan.nama,
+            nama: jenisBahan.nama,
         });
         res.status(201).json({
             success: true,
@@ -123,14 +118,13 @@ const newMaterialData = async (req, res, next) => {
         next(error);
     }
 };
-exports.newMaterialData = newMaterialData;
-const updateMaterialData = async (req, res, next) => {
+export const updateMaterialData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload ||
             !payload.id ||
             (!payload.nama && !payload.kode_bahan && payload.status === undefined)) {
-            throw new error_types_1.AppError("ID and at least one field to update are required", 400);
+            throw new AppError("ID and at least one field to update are required", 400);
         }
         const updateData = {
             updatedAt: new Date().toISOString(),
@@ -148,15 +142,15 @@ const updateMaterialData = async (req, res, next) => {
             updateData.isDeleted = payload.isDeleted;
             updateData.deletedAt = new Date().toISOString();
         }
-        const [updatedMasterData] = await database_1.db
-            .update(schema_1.jenisBahan)
+        const [updatedMasterData] = await db
+            .update(jenisBahan)
             .set(updateData)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisBahan.id, payload.id))
+            .where(eq(jenisBahan.id, payload.id))
             .returning({
-            nama: schema_1.jenisBahan.nama,
+            nama: jenisBahan.nama,
         });
         if (!updatedMasterData) {
-            throw new error_types_1.AppError("Material not found", 404);
+            throw new AppError("Material not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -172,30 +166,29 @@ const updateMaterialData = async (req, res, next) => {
         next(error);
     }
 };
-exports.updateMaterialData = updateMaterialData;
 // Soft delete
-const deleteMaterialData = async (req, res, next) => {
+export const deleteMaterialData = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("Material ID is Not Valid", 400);
+            throw new AppError("Material ID is Not Valid", 400);
         }
         if (isNaN(payload.id)) {
-            throw new error_types_1.AppError("Material ID is Not Valid", 400);
+            throw new AppError("Material ID is Not Valid", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .update(schema_1.jenisBahan)
+        const [deletedMasterData] = await db
+            .update(jenisBahan)
             .set({
             status: 0,
             isDeleted: true,
             deletedAt: new Date().toISOString(),
         })
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisBahan.id, payload.id))
+            .where(eq(jenisBahan.id, payload.id))
             .returning({
-            nama: schema_1.jenisBahan.nama,
+            nama: jenisBahan.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("Material not found", 404);
+            throw new AppError("Material not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -211,22 +204,21 @@ const deleteMaterialData = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteMaterialData = deleteMaterialData;
 // Permanent delete
-const deleteMaterialDataPermanent = async (req, res, next) => {
+export const deleteMaterialDataPermanent = async (req, res, next) => {
     try {
         const payload = req.body;
         if (!payload || !payload.id) {
-            throw new error_types_1.AppError("material ID is required", 400);
+            throw new AppError("material ID is required", 400);
         }
-        const [deletedMasterData] = await database_1.db
-            .delete(schema_1.jenisBahan)
-            .where((0, drizzle_orm_1.eq)(schema_1.jenisBahan.id, payload.id))
+        const [deletedMasterData] = await db
+            .delete(jenisBahan)
+            .where(eq(jenisBahan.id, payload.id))
             .returning({
-            nama: schema_1.jenisBahan.nama,
+            nama: jenisBahan.nama,
         });
         if (!deletedMasterData) {
-            throw new error_types_1.AppError("material not found", 404);
+            throw new AppError("material not found", 404);
         }
         res.status(200).json({
             success: true,
@@ -242,5 +234,3 @@ const deleteMaterialDataPermanent = async (req, res, next) => {
         next(error);
     }
 };
-exports.deleteMaterialDataPermanent = deleteMaterialDataPermanent;
-//# sourceMappingURL=master.material.controller.js.map

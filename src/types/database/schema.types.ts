@@ -1,5 +1,5 @@
 // src/types/database/schema.types.ts
-import { users } from "../../models/schema";
+import { users } from "../../models/schema.js";
 
 // Infer types dari Drizzle schema
 export type User = typeof users.$inferSelect;
