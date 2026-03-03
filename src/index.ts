@@ -61,10 +61,11 @@ app.use((req, res, next) => {
   next(createError(404));
 });
 
-app.listen(PORT, () =>
-  console.log(`[server]: Server is running at http://localhost:${PORT}`)
-);
+// app.listen(PORT, () =>
+//   console.log(`[server]: Server is running at http://localhost:${PORT}`)
+// );
 
+export default app
 // prompt tolong
 
 // context:
